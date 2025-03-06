@@ -1,16 +1,21 @@
 const jwt = require("jsonwebtoken");
+const db = require("../models");
 
 const auth = (role) => async (req, res, next) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
-  }
+  if (!token) return res.status(401).json({ message: "No token provided" });
 
   try {
+    // Check if token is blacklisted
+    const blacklisted = await db.BlacklistedToken.findOne({ where: { token } });
+    if (blacklisted) {
+      return res.status(401).json({ message: "Token has been invalidated. Please log in again." });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // content of id, role and name
+    req.user = decoded;
     if (role && decoded.role !== role) {
-      return res.status(403).json({ message: "Unauthorized: Only admins can perform this action" });
+      return res.status(403).json({ message: "Unauthorized: Insufficient role" });
     }
     next();
   } catch (error) {

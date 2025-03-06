@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, registerCompany, login } = require("../controllers/auth");
+const { register, registerCompany, login, logout } = require("../controllers/auth");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const router = express.Router();
@@ -12,6 +12,8 @@ router.post("/company/register", auth("admin"), upload.single("profileImageUrl")
 
 // Login for all roles
 router.post("/login", login);
+
+router.post("/logout", auth(), logout);
 
 module.exports = router;
 

@@ -9,7 +9,7 @@ module.exports = (sequelize) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      address: DataTypes.STRING(255),
+      webSiteURL: DataTypes.STRING(255),
       location: DataTypes.STRING(255),
       authCode: {
         type: DataTypes.STRING(50),

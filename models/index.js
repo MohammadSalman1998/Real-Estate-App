@@ -32,6 +32,7 @@ db.ExternalAd = require("./externalAd")(sequelize);
 db.Transaction = require("./transaction")(sequelize);
 db.SocialMedia = require("./socialMedia")(sequelize);
 db.VerificationCode = require("./verificationCode")(sequelize);
+db.BlacklistedToken = require("./blacklistedToken")(sequelize);
 
 // Define relationships
 // Account relationships

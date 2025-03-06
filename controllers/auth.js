@@ -77,15 +77,15 @@ exports.register = async (req, res) => {
 };
 
 exports.registerCompany = async (req, res) => {
-  const { name, email, password, phone, address, location, auth_code } =
+  const { name, email, password, phone, webSiteURL, location, auth_code } =
     req.body;
 
   try {
     // Validate inputs
-    if (!name || !email || !password || !auth_code || !address || !location) {
+    if (!name || !email || !password || !auth_code || !webSiteURL || !location) {
       return res
         .status(400)
-        .json({ message: "Name, email, password, address, location, and auth_code are required" });
+        .json({ message: "Name, email, password, webSiteURL, location, and auth_code are required" });
     }
     if (!validator.isEmail(email)) {
       return res.status(400).json({ message: "Invalid email format" });
@@ -130,7 +130,7 @@ exports.registerCompany = async (req, res) => {
     // Create company
     const company = await db.Company.create({
       companyId: account.id,
-      address,
+      webSiteURL,
       location,
       authCode: auth_code,
       profileImageUrl,
@@ -189,6 +189,22 @@ exports.login = async (req, res) => {
       // data: { role: account.role, id: account.id },
       token,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+exports.logout = async (req, res) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(400).json({ message: "No token provided" });
+  }
+
+  try {
+    // Add token to blacklist
+    await db.BlacklistedToken.create({ token });
+    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
