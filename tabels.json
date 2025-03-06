@@ -1,0 +1,183 @@
+-- 1-Company Table
+CREATE TABLE companies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    location VARCHAR(255),
+    auth_code VARCHAR(50) UNIQUE NOT NULL,
+    profile_image_url VARCHAR(255),
+    wallet_balance DECIMAL(10, 2) DEFAULT 0.00,
+    isCompany BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2-abou us table
+CREATE TABLE about_us (
+id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id INT,
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+
+-- 3-Customer Table
+CREATE TABLE customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    profile_image_url VARCHAR(255),
+    wallet_balance DECIMAL(10, 2) DEFAULT 0.00,
+    isUser BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4-Post Table
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id INT,
+    type ENUM('villa', 'commercial_store', 'house') NOT NULL,
+    status ENUM('accepted', 'rejected', 'pending') DEFAULT 'pending',
+    rejection_reason TEXT,
+    sale_price DECIMAL(15, 2),
+    rent_price DECIMAL(15, 2),
+    negotiable BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    main_image_url VARCHAR(255),
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+
+-- 5-Post Images Table
+CREATE TABLE post_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT,
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+
+-- 6-Villa Table (Specific attributes)
+CREATE TABLE villas (
+    post_id INT PRIMARY KEY,
+    land_area DECIMAL(10, 2),
+    building_area DECIMAL(10, 2),
+    pool_area DECIMAL(10, 2),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+
+-- 7-Commercial Store Table
+CREATE TABLE commercial_stores (
+    post_id INT PRIMARY KEY,
+    area DECIMAL(10, 2),
+    location VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+
+-- 8-House Table
+CREATE TABLE houses (
+    post_id INT PRIMARY KEY,
+    area DECIMAL(10, 2),
+    location VARCHAR(255),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+
+-- 9-Reservation Table
+CREATE TABLE reservations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT,
+    customer_id INT,
+    deposit_amount DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id),
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+-- 10-Complaint Table
+CREATE TABLE complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    company_id INT,
+    content TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+
+-- 11-Favorite Table
+CREATE TABLE favorites (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    post_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+
+-- 12-Admin Table
+CREATE TABLE admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    isAdmin BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13-External Ad Table
+CREATE TABLE external_ads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14-Transaction Table
+CREATE TABLE transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reservation_id INT,
+    company_id INT,
+    customer_id INT,
+    amount_received DECIMAL(10, 2),
+    admin_fee DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reservation_id) REFERENCES reservations(id),
+    FOREIGN KEY (company_id) REFERENCES companies(id),
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+-- 15-social media table
+CREATE TABLE social_media (
+id INT AUTO_INCREMENT PRIMARY KEY,
+company_id INT,
+    facebook VARCHAR(255),
+    twitter VARCHAR(255),
+    instagram VARCHAR(255),
+    whatsapp VARCHAR(255),
+    telegram VARCHAR(255),
+    linkedin VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+-- 16-verification_code table
+CREATE TABLE verification_code (
+id INT AUTO_INCREMENT PRIMARY KEY,
+company_email VARCHAR(255),
+    code VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+);
+-- 17-advertisement table
+CREATE TABLE advertisement (
+id INT AUTO_INCREMENT PRIMARY KEY,
+admin_id INT,
+    image_url VARCHAR(255),
+    content VARCHAR(255),
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES admins(id)
+);
