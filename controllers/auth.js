@@ -217,7 +217,7 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       message: "تم تسجيل الدحول بنجاح",
-      // data: { role: account.role, id: account.id },
+      data: { role: account.role, id: account.id },
       token,
     });
   } catch (error) {
@@ -261,6 +261,7 @@ exports.editAccount = async (req, res) => {
   const userRole = req.user.role; // From JWT
   const userId = req.user.id;     // From JWT
 
+  let prevWalletBalance;
   try {
     const accountId = parseInt(id, 10);
     if (isNaN(accountId)) {
@@ -331,6 +332,7 @@ exports.editAccount = async (req, res) => {
 
     if (account.role === "company") {
       const company = await db.Company.findOne({ where: { companyId: accountId } });
+      prevWalletBalance = company.walletBalance
       if (!company) return res.status(404).json({ message: "هذا الحساب غير موجود" });
 
       const companyUpdates = {};
@@ -338,11 +340,11 @@ exports.editAccount = async (req, res) => {
         if (webSiteURL) companyUpdates.webSiteURL = webSiteURL;
         if (location) companyUpdates.location = location;
         if (authCode) companyUpdates.authCode = authCode;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = walletBalance;
+        if (walletBalance !== undefined) companyUpdates.walletBalance = walletBalance + prevWalletBalance;
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
       } else if (userRole === "company") {
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = walletBalance;
+        if (walletBalance !== undefined) companyUpdates.walletBalance = walletBalance + prevWalletBalance;
         if (address || location || webSiteURL || authCode) {
           return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل والمبلغ الذي في المحفظة" });
         }
@@ -359,12 +361,13 @@ exports.editAccount = async (req, res) => {
       });
     } else if (account.role === "user") {
       const customer = await db.Customer.findOne({ where: { customerId: accountId } });
+      prevWalletBalance = customer.walletBalance
       if (!customer) return res.status(404).json({ message: "هذا الحساب غير موجود" });
 
       const customerUpdates = {};
       if (userRole === "admin" || userRole === "user") {
         if (newProfileImageUrl) customerUpdates.profileImageUrl = newProfileImageUrl;
-        if (walletBalance !== undefined) customerUpdates.walletBalance = walletBalance;
+        if (walletBalance !== undefined) customerUpdates.walletBalance = parseFloat( walletBalance + prevWalletBalance);
       }
       await customer.update(customerUpdates);
 

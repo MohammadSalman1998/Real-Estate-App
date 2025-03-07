@@ -26,6 +26,7 @@ app.use(express.json());
 app.use("/uploads", express.static("uploads")); // Serve uploaded images
 
 app.use("/api/auth", authRoutes);
+app.use("/api/post", require("./routes/post"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
