@@ -36,17 +36,18 @@ db.BlacklistedToken = require("./blacklistedToken")(sequelize);
 
 // Define relationships
 // Account relationships
-db.Account.hasOne(db.Company, { foreignKey: "id" }); // Company.id = Account.id
+db.Account.hasOne(db.Company, { foreignKey: "id" }); 
 db.Company.belongsTo(db.Account, { foreignKey: "id" });
 
-db.Account.hasOne(db.Company, { foreignKey: "companyId" });
+db.Account.hasOne(db.Company, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.Company.belongsTo(db.Account, { foreignKey: "companyId" });
 
-db.Account.hasOne(db.Customer, { foreignKey: "customerId" });
-db.Customer.belongsTo(db.Account, { foreignKey: "customerId" });
 
-db.Account.hasOne(db.Customer, { foreignKey: "id" }); // Customer.id = Account.id
+db.Account.hasOne(db.Customer, { foreignKey: "id" }); 
 db.Customer.belongsTo(db.Account, { foreignKey: "id" });
+
+db.Account.hasOne(db.Customer, { foreignKey: "customerId", onDelete: "CASCADE" });
+db.Customer.belongsTo(db.Account, { foreignKey: "customerId" });
 
 // Company relationships
 db.Company.hasOne(db.AboutUs, { foreignKey: "companyId" });
