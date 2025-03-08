@@ -1,5 +1,5 @@
 const express = require("express");
-const { createPost, acceptPost, rejectPost } = require("../controllers/post");
+const { createPost, acceptPost, rejectPost, getAllPosts, getPostsByStatus, getPostsByType } = require("../controllers/post");
 const auth = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
@@ -42,5 +42,8 @@ router.post(
 );
 router.put("/:id/accept", auth(), acceptPost);
 router.put("/:id/reject", auth(), rejectPost);
+router.get("/", auth(), getAllPosts);              // Get all posts
+router.get("/status/:status", auth(), getPostsByStatus); // Get posts by status
+router.get("/type/:type", auth(), getPostsByType); // Get posts by type
 
 module.exports = router;

@@ -44,7 +44,7 @@ exports.register = async (req, res) => {
     }
 
     // Create account
-    const account = await db.Account.create({
+    const account = await db.Account.create({ 
       name,
       email,
       password: hashedPassword,
@@ -61,6 +61,14 @@ exports.register = async (req, res) => {
       });
     }
 
+    const data = {
+      name,
+      email,
+      phone,
+      role,
+      customer
+    }
+
     // Generate token
     const token = jwt.sign(
       { id: account.id, role: account.role, name: account.name },
@@ -72,7 +80,7 @@ exports.register = async (req, res) => {
       message: `${
         role === "admin" ? "Admin" : "Customer"
       } تم إنشاء الحساب بنجاح`,
-      data: { account, customer },
+      data,
       token,
     });
   } catch (error) {
@@ -172,9 +180,17 @@ exports.registerCompany = async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    const data = {
+      name,
+      email,
+      phone,
+      role: "company",
+      company
+    }
+
     res.status(201).json({
       message: "تم انشاء حساب شركة جديدة بنجاح",
-      data: { account, company },
+      data,
       token,
     });
   } catch (error) {
@@ -340,11 +356,11 @@ exports.editAccount = async (req, res) => {
         if (webSiteURL) companyUpdates.webSiteURL = webSiteURL;
         if (location) companyUpdates.location = location;
         if (authCode) companyUpdates.authCode = authCode;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = walletBalance + prevWalletBalance;
+        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt( walletBalance) + parseInt(prevWalletBalance);
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
       } else if (userRole === "company") {
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = walletBalance + prevWalletBalance;
+        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt( walletBalance) + parseInt(prevWalletBalance);
         if (address || location || webSiteURL || authCode) {
           return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل والمبلغ الذي في المحفظة" });
         }
@@ -367,7 +383,7 @@ exports.editAccount = async (req, res) => {
       const customerUpdates = {};
       if (userRole === "admin" || userRole === "user") {
         if (newProfileImageUrl) customerUpdates.profileImageUrl = newProfileImageUrl;
-        if (walletBalance !== undefined) customerUpdates.walletBalance = parseFloat( walletBalance + prevWalletBalance);
+        if (walletBalance !== undefined) customerUpdates.walletBalance = parseInt( walletBalance) + parseInt(prevWalletBalance);
       }
       await customer.update(customerUpdates);
 

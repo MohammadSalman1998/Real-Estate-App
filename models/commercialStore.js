@@ -8,6 +8,7 @@ module.exports = (sequelize) => {
     },
     area: DataTypes.DECIMAL(10, 2),
     location: DataTypes.STRING(255),
+    description: DataTypes.TEXT,
   }, {
     timestamps: true,
     createdAt: 'createdAt',

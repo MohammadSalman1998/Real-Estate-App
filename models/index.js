@@ -35,77 +35,69 @@ db.VerificationCode = require("./verificationCode")(sequelize);
 db.BlacklistedToken = require("./blacklistedToken")(sequelize);
 
 // Define relationships
-// Account relationships
-db.Account.hasOne(db.Company, { foreignKey: "id" }); 
-db.Company.belongsTo(db.Account, { foreignKey: "id" });
-
 db.Account.hasOne(db.Company, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.Company.belongsTo(db.Account, { foreignKey: "companyId" });
-
-
-db.Account.hasOne(db.Customer, { foreignKey: "id" }); 
-db.Customer.belongsTo(db.Account, { foreignKey: "id" });
 
 db.Account.hasOne(db.Customer, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Customer.belongsTo(db.Account, { foreignKey: "customerId" });
 
+db.Account.hasMany(db.Post, { foreignKey: "companyId", onDelete: "SET NULL", onUpdate: "CASCADE" });
+db.Post.belongsTo(db.Account, { foreignKey: "companyId" });
+
 // Company relationships
-db.Company.hasOne(db.AboutUs, { foreignKey: "companyId" });
+db.Company.hasOne(db.AboutUs, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.AboutUs.belongsTo(db.Company, { foreignKey: "companyId" });
 
-db.Company.hasMany(db.Post, { foreignKey: "companyId" });
-db.Post.belongsTo(db.Company, { foreignKey: "companyId" });
-
-db.Company.hasMany(db.Complaint, { foreignKey: "companyId" });
+db.Company.hasMany(db.Complaint, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.Complaint.belongsTo(db.Company, { foreignKey: "companyId" });
 
-db.Company.hasMany(db.Transaction, { foreignKey: "companyId" });
+db.Company.hasMany(db.Transaction, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.Transaction.belongsTo(db.Company, { foreignKey: "companyId" });
 
-db.Company.hasOne(db.SocialMedia, { foreignKey: "companyId" });
+db.Company.hasOne(db.SocialMedia, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.SocialMedia.belongsTo(db.Company, { foreignKey: "companyId" });
 
-db.Company.hasMany(db.VerificationCode, { foreignKey: "companyId" });
+db.Company.hasMany(db.VerificationCode, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.VerificationCode.belongsTo(db.Company, { foreignKey: "companyId" });
 
 // Post relationships
-db.Post.hasMany(db.PostImage, { foreignKey: "postId" });
+db.Post.hasMany(db.PostImage, { foreignKey: "postId", onDelete: "CASCADE" });
 db.PostImage.belongsTo(db.Post, { foreignKey: "postId" });
 
-db.Post.hasOne(db.Villa, { foreignKey: "postId" });
+db.Post.hasOne(db.Villa, { foreignKey: "postId", onDelete: "CASCADE" });
 db.Villa.belongsTo(db.Post, { foreignKey: "postId" });
 
-db.Post.hasOne(db.CommercialStore, { foreignKey: "postId" });
+db.Post.hasOne(db.CommercialStore, { foreignKey: "postId", onDelete: "CASCADE" });
 db.CommercialStore.belongsTo(db.Post, { foreignKey: "postId" });
 
-db.Post.hasOne(db.House, { foreignKey: "postId" });
+db.Post.hasOne(db.House, { foreignKey: "postId", onDelete: "CASCADE" });
 db.House.belongsTo(db.Post, { foreignKey: "postId" });
 
-db.Post.hasMany(db.Reservation, { foreignKey: "postId" });
+db.Post.hasMany(db.Reservation, { foreignKey: "postId", onDelete: "CASCADE" });
 db.Reservation.belongsTo(db.Post, { foreignKey: "postId" });
 
-db.Post.hasMany(db.Favorite, { foreignKey: "postId" });
+db.Post.hasMany(db.Favorite, { foreignKey: "postId", onDelete: "CASCADE" });
 db.Favorite.belongsTo(db.Post, { foreignKey: "postId" });
 
 // Customer relationships
-db.Customer.hasMany(db.Reservation, { foreignKey: "customerId" });
+db.Customer.hasMany(db.Reservation, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Reservation.belongsTo(db.Customer, { foreignKey: "customerId" });
 
-db.Customer.hasMany(db.Complaint, { foreignKey: "customerId" });
+db.Customer.hasMany(db.Complaint, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Complaint.belongsTo(db.Customer, { foreignKey: "customerId" });
 
-db.Customer.hasMany(db.Favorite, { foreignKey: "customerId" });
+db.Customer.hasMany(db.Favorite, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Favorite.belongsTo(db.Customer, { foreignKey: "customerId" });
 
-db.Customer.hasMany(db.Transaction, { foreignKey: "customerId" });
+db.Customer.hasMany(db.Transaction, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Transaction.belongsTo(db.Customer, { foreignKey: "customerId" });
 
 // Reservation relationships
-db.Reservation.hasMany(db.Transaction, { foreignKey: "reservationId" });
+db.Reservation.hasMany(db.Transaction, { foreignKey: "reservationId", onDelete: "CASCADE" });
 db.Transaction.belongsTo(db.Reservation, { foreignKey: "reservationId" });
 
-// Advertisement relationships (admin now via Account with role 'admin')
-db.Account.hasMany(db.ExternalAd, { foreignKey: "adminId", constraints: false });
+// Advertisement relationships (admin via Account with role 'admin')
+db.Account.hasMany(db.ExternalAd, { foreignKey: "adminId", constraints: false, onDelete: "CASCADE" });
 db.ExternalAd.belongsTo(db.Account, { foreignKey: "adminId", constraints: false });
 
 module.exports = db;
