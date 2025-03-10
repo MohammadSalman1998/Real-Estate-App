@@ -1,5 +1,5 @@
 const express = require("express");
-const { createPost, acceptPost, rejectPost, getAllPosts, getPostsByStatus, getPostsByType } = require("../controllers/post");
+const { createPost, acceptPost, rejectPost, getAllPosts, getPostsByStatus, getPostsByType, editPost, deletePost, filterPosts } = require("../controllers/post");
 const auth = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
@@ -42,8 +42,16 @@ router.post(
 );
 router.put("/:id/accept", auth(), acceptPost);
 router.put("/:id/reject", auth(), rejectPost);
-router.get("/", auth(), getAllPosts);              // Get all posts
-router.get("/status/:status", auth(), getPostsByStatus); // Get posts by status
-router.get("/type/:type", auth(), getPostsByType); // Get posts by type
+router.get("/", auth(), getAllPosts);              
+router.get("/status/:status", auth(), getPostsByStatus); 
+router.get("/type/:type", auth(), getPostsByType); 
+router.put(
+  "/:id",
+  auth(),
+  upload.fields([{ name: "mainImage", maxCount: 1 }, { name: "images", maxCount: 10 }]), 
+  editPost
+);
+router.delete("/:id", auth(), deletePost);
+router.get("/filter", auth(), filterPosts);
 
 module.exports = router;

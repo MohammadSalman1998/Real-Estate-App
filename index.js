@@ -1,7 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const authRoutes = require("./routes/auth");
 const db = require("./models");
 const fs = require("fs");
 const path = require("path");
@@ -25,8 +24,11 @@ app.use(cors());
 app.use(express.json()); 
 app.use("/uploads", express.static("uploads")); // Serve uploaded images
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/post", require("./routes/post"));
+app.use("/api/favorite", require("./routes/favorite"));
+app.use("/api/external_ad", require("./routes/externalAd"));
+app.use("/api/about_us", require("./routes/aboutUs"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

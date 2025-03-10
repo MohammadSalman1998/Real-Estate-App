@@ -9,7 +9,7 @@ const auth = (role) => async (req, res, next) => {
     // Check if token is blacklisted
     const blacklisted = await db.BlacklistedToken.findOne({ where: { token } });
     if (blacklisted) {
-      return res.status(401).json({ message: "Token has been invalidated. Please log in again." });
+      return res.status(401).json({ message: "انتهت الجلسة، الرجاء إعادة تسجيل الدخول." });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -19,7 +19,7 @@ const auth = (role) => async (req, res, next) => {
     }
     next();
   } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
+    res.status(401).json({ message: "انتهت الجلسة، الرجاء إعادة تسجيل الدخول" });
   }
 };
 

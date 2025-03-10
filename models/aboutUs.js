@@ -7,7 +7,18 @@ module.exports = (sequelize) => {
       autoIncrement: true,
       primaryKey: true,
     },
-    content: DataTypes.TEXT,
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    mission: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    vision: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   }, {
     timestamps: true,
     createdAt: 'createdAt',
