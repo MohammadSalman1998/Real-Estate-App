@@ -16,6 +16,7 @@ module.exports = (sequelize) => {
       defaultValue: 'pending',
     },
     rejectionReason: DataTypes.TEXT,
+    deposit: DataTypes.DECIMAL(15, 2),
     salePrice: DataTypes.DECIMAL(15, 2),
     rentPrice: DataTypes.DECIMAL(15, 2),
     negotiable: {

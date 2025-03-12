@@ -8,7 +8,7 @@ const db = require("../models");
  */
 
 exports.createReservation = async (req, res) => {
-  const { postId, type } = req.body; // type: "rent" or "sale"
+  const { postId } = req.body; 
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -17,17 +17,13 @@ exports.createReservation = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    if (!postId || !type) {
-      return res.status(400).json({ message: "مطلوب معرف المنشور ونوع الحجز (rent أو sale)" });
+    if (!postId ) {
+      return res.status(400).json({ message: "مطلوب معرف المنشور" });
     }
 
     const postIdInt = parseInt(postId, 10);
     if (isNaN(postIdInt)) {
       return res.status(400).json({ message: "معرف المنشور غير صالح" });
-    }
-
-    if (!["rent", "sale"].includes(type)) {
-      return res.status(400).json({ message: "نوع الحجز يجب أن يكون 'rent' أو 'sale'" });
     }
 
     // Start a transaction to ensure atomicity
@@ -66,13 +62,9 @@ exports.createReservation = async (req, res) => {
       }
 
       // Determine the amount based on type (rent or sale)
-      const amount = type === "sale" && post.salePrice 
-        ? parseFloat(post.salePrice) 
-        : type === "rent" && post.rentPrice 
-        ? parseFloat(post.rentPrice) 
-        : null;
+      const amount =  post.deposit 
       if (!amount || amount <= 0) {
-        throw new Error(`لا يوجد ${type === "sale" ? "سعر بيع" : "سعر إيجار"} صالح للمنشور`);
+        throw new Error(`لا يوجد سعر صالح للمنشور`);
       }
 
       // Calculate admin fee and company amount

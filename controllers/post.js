@@ -10,7 +10,7 @@ const { Op } = require("sequelize");
  */
 
 exports.createPost = async (req, res) => {
-  const { type, salePrice, rentPrice, negotiable, rejectionReason, ...typeSpecificData } = req.body;
+  const { type, salePrice, rentPrice, negotiable, rejectionReason,deposit, ...typeSpecificData } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -33,6 +33,7 @@ exports.createPost = async (req, res) => {
       type,
       salePrice: salePrice || null,
       rentPrice: rentPrice || null,
+      deposit,
       negotiable: negotiable === "true" || negotiable === true || true,
       mainImageUrl,
       status: "pending",
@@ -390,7 +391,7 @@ exports.getPostsByType = async (req, res) => {
 
 exports.editPost = async (req, res) => {
   const { id } = req.params;
-  const {  salePrice, rentPrice, negotiable, ...typeSpecificData } = req.body;
+  const {  salePrice, rentPrice, negotiable,deposit, ...typeSpecificData } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -435,6 +436,7 @@ exports.editPost = async (req, res) => {
       salePrice: salePrice !== undefined ? salePrice : post.salePrice,
       rentPrice: rentPrice !== undefined ? rentPrice : post.rentPrice,
       negotiable: negotiable !== undefined ? negotiable : post.negotiable,
+      deposit: deposit !== undefined ? deposit : post.deposit,
       mainImageUrl,
       status: "pending", // Reset status to pending
     });
