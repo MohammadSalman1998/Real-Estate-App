@@ -95,46 +95,35 @@ exports.register = async (req, res) => {
  */
 
 exports.registerCompany = async (req, res) => {
-  const { name, email, password, phone, webSiteURL, location, auth_code } =
-    req.body;
+  const { name, email, password, phone, webSiteURL, location, auth_code } = req.body;
 
   try {
     // Validate inputs
-    if (
-      !name ||
-      !email ||
-      !password ||
-      !auth_code ||
-      !webSiteURL ||
-      !location
-    ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "هذه الحقول مطلوبة: الاسم، الإيميل، كلمة المرور، عنوان موقع الويب، عنوان الشركة ورقم السجل التجاري",
-        });
+    if (!name || !email || !password || !auth_code  || !location) {
+      return res.status(400).json({
+        message: "هذه الحقول مطلوبة: الاسم، الإيميل، كلمة المرور، عنوان الشركة ورقم السجل التجاري",
+      });
     }
     if (!validator.isEmail(email)) {
       return res.status(400).json({ message: "صيغة الإيميل غير صحيحة" });
     }
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+      return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+    }
+
+    // Validate webSiteURL starts with http:// or https://
+    if (!/^(http:\/\/|https:\/\/)/i.test(webSiteURL)) {
+      return res.status(400).json({
+        message: "عنوان موقع الويب يجب أن يبدأ بـ 'http://' أو 'https://'",
+      });
     }
 
     // Check verification code
     const verification = await db.VerificationCode.findOne({
-      where: {
-        code: auth_code,
-      },
+      where: { code: auth_code },
     });
-
     if (verification) {
-      return res
-        .status(403)
-        .json({ message: "رقم السجل التجاري موجود مسبقا" });
+      return res.status(403).json({ message: "رقم السجل التجاري موجود مسبقا" });
     }
 
     // Hash password
@@ -181,8 +170,8 @@ exports.registerCompany = async (req, res) => {
       email,
       phone,
       role: "company",
-      company
-    }
+      company,
+    };
 
     res.status(201).json({
       message: "تم انشاء حساب شركة جديدة بنجاح",
@@ -191,9 +180,7 @@ exports.registerCompany = async (req, res) => {
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
-      return res
-        .status(400)
-        .json({ message: "الإيميل أو رقم السجل التجاري موجود مسبقا" });
+      return res.status(400).json({ message: "الإيميل أو رقم السجل التجاري موجود مسبقا" });
     }
     res.status(500).json({ message: "خطأ من الخادم", error: error.message });
   }
@@ -344,19 +331,26 @@ exports.editAccount = async (req, res) => {
 
     if (account.role === "company") {
       const company = await db.Company.findOne({ where: { companyId: accountId } });
-      prevWalletBalance = company.walletBalance
+      prevWalletBalance = company.walletBalance;
       if (!company) return res.status(404).json({ message: "هذا الحساب غير موجود" });
-
+    
+     
+      if (webSiteURL && !/^(http:\/\/|https:\/\/)/i.test(webSiteURL)) {
+        return res.status(400).json({
+          message: "عنوان موقع الويب يجب أن يبدأ بـ 'http://' أو 'https://'",
+        });
+      }
+    
       const companyUpdates = {};
       if (userRole === "admin") {
         if (webSiteURL) companyUpdates.webSiteURL = webSiteURL;
         if (location) companyUpdates.location = location;
         if (authCode) companyUpdates.authCode = authCode;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt( walletBalance) + parseInt(prevWalletBalance);
+        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
       } else if (userRole === "company") {
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt( walletBalance) + parseInt(prevWalletBalance);
+        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
         if (address || location || webSiteURL || authCode) {
           return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل والمبلغ الذي في المحفظة" });
         }
