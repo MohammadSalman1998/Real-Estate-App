@@ -515,7 +515,7 @@ exports.getAccountById = async (req, res) => {
     if (account.role === "company") {
       const company = await db.Company.findOne({ where: { companyId: accountId } });
       if (company) {
-        Object.assign(combinedData, {
+        Object.assign(combinedData, { 
           webSiteURL: company.webSiteURL,
           location: company.location,
           authCode: company.authCode,

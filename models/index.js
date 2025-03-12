@@ -33,6 +33,7 @@ db.Transaction = require("./transaction")(sequelize);
 db.SocialMedia = require("./socialMedia")(sequelize);
 db.VerificationCode = require("./verificationCode")(sequelize);
 db.BlacklistedToken = require("./blacklistedToken")(sequelize);
+db.Wallet = require("./wallet")(sequelize);
 
 // Define relationships
 db.Account.hasOne(db.Company, { foreignKey: "companyId", onDelete: "CASCADE" });
@@ -99,5 +100,9 @@ db.Transaction.belongsTo(db.Reservation, { foreignKey: "reservationId" });
 // Advertisement relationships (admin via Account with role 'admin')
 db.Account.hasMany(db.ExternalAd, { foreignKey: "adminId", constraints: false, onDelete: "CASCADE" });
 db.ExternalAd.belongsTo(db.Account, { foreignKey: "adminId", constraints: false });
+
+// Admin Wallet relationships
+db.Account.hasOne(db.Wallet, { foreignKey: "adminId", onDelete: "CASCADE" });
+db.Wallet.belongsTo(db.Account, { foreignKey: "adminId" });
 
 module.exports = db;
