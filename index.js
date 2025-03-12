@@ -24,6 +24,7 @@ app.use(cors());
 app.use(express.json()); 
 app.use("/uploads", express.static("uploads")); // Serve uploaded images
 
+//end points
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/post", require("./routes/post"));
 app.use("/api/favorite", require("./routes/favorite"));
@@ -35,8 +36,11 @@ app.use("/api/verificationCode", require("./routes/verificationCode"));
 app.use("/api/reservation", require("./routes/reservation"));
 app.use("/api/wallet", require("./routes/adminWallet"));
 
+// server connection
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Merge tables to DB
+
 // db.sequelize.sync({ alter: true }).then(() => {
 //   console.log("Database synced");
 // }).catch((error) => {

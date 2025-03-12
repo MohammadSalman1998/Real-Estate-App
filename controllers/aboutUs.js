@@ -128,7 +128,7 @@ exports.getAboutUsById = async (req, res) => {
               {
                 model: db.Account,
                 as: "Account",
-                attributes: ["id", "name", "email"], // Explicitly include only safe fields
+                attributes: ["id", "name", "email"], 
               },
             ],
           },

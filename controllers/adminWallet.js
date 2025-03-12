@@ -1,7 +1,12 @@
-// In controllers/reservation.js (or controllers/wallet.js)
 const db = require("../models");
 
-// Get Admin Wallet
+/**
+ *  @method GET
+ *  @route  ~/api/wallet/admin
+ *  @desc   Get Admin Wallet
+ *  @access private only admin 
+ */
+
 exports.getAdminWallet = async (req, res) => {
   const userRole = req.user.role;
   const userId = req.user.id;

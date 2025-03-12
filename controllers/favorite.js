@@ -8,7 +8,7 @@ const db = require("../models");
  */
 
 exports.addToFavorites = async (req, res) => {
-  const { postId } = req.body; // Expect postId in the request body
+  const { postId } = req.body; 
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -139,7 +139,7 @@ exports.getFavorites = async (req, res) => {
  */
 
 exports.removeFromFavorites = async (req, res) => {
-    const { postId } = req.body; // Expect postId in the request body
+    const { postId } = req.body; 
     const userRole = req.user.role;
     const userId = req.user.id;
   
