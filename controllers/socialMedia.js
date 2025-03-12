@@ -7,6 +7,7 @@ const db = require("../models");
  *  @access private only company
  */
 
+
 exports.createSocialMedia = async (req, res) => {
   const { facebook, twitter, instagram, whatsapp, telegram, linkedin, companyId } = req.body;
   const userRole = req.user.role;
@@ -22,11 +23,27 @@ exports.createSocialMedia = async (req, res) => {
       const company = await db.Company.findOne({ where: { companyId: userId } });
       if (!company) return res.status(404).json({ message: "تأكد من حسابك" });
       finalCompanyId = company.id;
-    } 
+    }
 
     const existingSocialMedia = await db.SocialMedia.findOne({ where: { companyId: finalCompanyId } });
     if (existingSocialMedia) {
       return res.status(400).json({ message: "وسائل التواصل الاجتماعي موجودة بالفعل لهذه الشركة" });
+    }
+
+    // Validation function to check if URL starts with http:// or https://
+    const validateUrl = (url) => {
+      if (!url) return true; // Allow null/undefined
+      return /^(http:\/\/|https:\/\/)/i.test(url);
+    };
+
+    // Check each social media field
+    const socialMediaFields = { facebook, twitter, instagram, whatsapp, telegram, linkedin };
+    for (const [field, value] of Object.entries(socialMediaFields)) {
+      if (value && !validateUrl(value)) {
+        return res.status(400).json({
+          message: `رابط ${field} يجب أن يبدأ بـ "http://" أو "https://"`
+        });
+      }
     }
 
     const socialMedia = await db.SocialMedia.create({
@@ -93,6 +110,7 @@ exports.getSocialMedia = async (req, res) => {
  *  @access private only company
  */
 
+
 exports.updateSocialMedia = async (req, res) => {
   const { companyId } = req.params;
   const { facebook, twitter, instagram, whatsapp, telegram, linkedin } = req.body;
@@ -119,6 +137,22 @@ exports.updateSocialMedia = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
+    // Validation function to check if URL starts with http:// or https://
+    const validateUrl = (url) => {
+      if (url === undefined || url === null) return true; // Allow undefined/null (no change)
+      return /^(http:\/\/|https:\/\/)/i.test(url);
+    };
+
+    // Check each social media field if provided
+    const socialMediaFields = { facebook, twitter, instagram, whatsapp, telegram, linkedin };
+    for (const [field, value] of Object.entries(socialMediaFields)) {
+      if (value !== undefined && !validateUrl(value)) {
+        return res.status(400).json({
+          message: `رابط ${field} يجب أن يبدأ بـ "http://" أو "https://"`
+        });
+      }
+    }
+
     await socialMedia.update({
       facebook: facebook !== undefined ? facebook : socialMedia.facebook,
       twitter: twitter !== undefined ? twitter : socialMedia.twitter,
@@ -131,7 +165,7 @@ exports.updateSocialMedia = async (req, res) => {
     const updatedSocialMedia = await db.SocialMedia.findOne({
       where: { companyId: companyIdInt },
       include: [
-        { model: db.Company, as: "Company",attributes: { exclude: ["walletBalance"] }, include: [{ model: db.Account, as: "Account", attributes: { exclude: ["password"] } }] },
+        { model: db.Company, as: "Company", attributes: { exclude: ["walletBalance"] }, include: [{ model: db.Account, as: "Account", attributes: { exclude: ["password"] } }] },
       ],
     });
 

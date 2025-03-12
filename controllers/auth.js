@@ -13,11 +13,11 @@ const validator = require("validator");
 
 
 exports.register = async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
+  const { name, email, password, phone } = req.body;
 
   try {
     // Validate inputs
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password ) {
       return res
         .status(400)
         .json({ message: "هذه الحقول مطلوبة: الاسم، الإيميل وكلمة المرور" });
@@ -30,19 +30,18 @@ exports.register = async (req, res) => {
         .status(400)
         .json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
     }
-    if (!["admin", "user"].includes(role)) {
-      return res.status(400).json({ message: "Role is required" });
-    }
+
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Handle image upload for customer
     let profileImageUrl = null;
-    if (role === "user" && req.file) {
+    if (req.file) {
       profileImageUrl = `/uploads/${req.file.filename}`;
     }
 
+    const role = 'user'
     // Create account
     const account = await db.Account.create({ 
       name,
@@ -52,14 +51,11 @@ exports.register = async (req, res) => {
       role,
     });
 
-    // If customer, create Customer record
-    let customer;
-    if (role === "user") {
-      customer = await db.Customer.create({
+
+     const customer = await db.Customer.create({
         customerId: account.id,
         profileImageUrl,
       });
-    }
 
     const data = {
       name,
@@ -78,7 +74,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: `${
-        role === "admin" ? "Admin" : "Customer"
+        role 
       } تم إنشاء الحساب بنجاح`,
       data,
       token,
