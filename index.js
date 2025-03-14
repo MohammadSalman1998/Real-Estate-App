@@ -39,6 +39,7 @@ app.use("/api/wallet", require("./routes/adminWallet"));
 // server connection
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 // Merge tables to DB
 
 // db.sequelize.sync({ alter: true }).then(() => {

@@ -70,9 +70,9 @@ exports.getAllExternalAds = async (req, res) => {
   const userRole = req.user.role;
 
   try {
-    if (userRole !== "admin") {
-      return res.status(403).json({ message: "ليس لديك الصلاحية" });
-    }
+    // if (userRole !== "admin") {
+    //   return res.status(403).json({ message: "ليس لديك الصلاحية" });
+    // }
 
     const externalAds = await db.ExternalAd.findAll({
       include: [
