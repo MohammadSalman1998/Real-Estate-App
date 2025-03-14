@@ -63,26 +63,28 @@ exports.createExternalAd = async (req, res) => {
  *  @method GET
  *  @route  ~/api/external_ad
  *  @desc   Read All ExternalAds
- *  @access private only admin 
+ *  @access public anyone
  */
 
 exports.getAllExternalAds = async (req, res) => {
-  const userRole = req.user.role;
+  // const userRole = req.user.role;
 
   try {
     // if (userRole !== "admin") {
     //   return res.status(403).json({ message: "ليس لديك الصلاحية" });
     // }
 
-    const externalAds = await db.ExternalAd.findAll({
-      include: [
-        {
-          model: db.Account,
-          as: "Account",
-          attributes: { exclude: ["password"] },
-        },
-      ],
-    });
+    const externalAds = await db.ExternalAd.findAll(
+    //   {
+    //   include: [
+    //     {
+    //       model: db.Account,
+    //       as: "Account",
+    //       attributes: { exclude: ["password"] },
+    //     },
+    //   ],
+    // }
+  );
 
     res.status(200).json({
       message: "تم جلب الإعلانات بنجاح",
