@@ -571,7 +571,7 @@ exports.deletePost = async (req, res) => {
 };
 
 /**
- *  @method DELETE
+ *  @method GET
  *  @route  ~/api/post/filter?
  *  @desc   filter of posts
  *  @access public 
