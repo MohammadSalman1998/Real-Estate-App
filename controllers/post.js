@@ -23,6 +23,12 @@ exports.createPost = async (req, res) => {
       return res.status(400).json({ message: "نوع المنشور غير صحيح" });
     }
 
+    // Verify the company exists
+    const company = await db.Company.findOne({ where: { companyId: userId } });
+    if (!company) {
+      return res.status(404).json({ message: "حساب الشركة غير موجود" });
+    }
+
     let mainImageUrl = null;
     if (req.files && req.files.mainImage) {
       mainImageUrl = `/uploads/${req.files.mainImage[0].filename}`;
