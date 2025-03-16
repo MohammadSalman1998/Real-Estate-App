@@ -42,8 +42,8 @@ db.Company.belongsTo(db.Account, { foreignKey: "companyId" });
 db.Account.hasOne(db.Customer, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Customer.belongsTo(db.Account, { foreignKey: "customerId" });
 
-// db.Account.hasMany(db.Post, { foreignKey: "companyId", onDelete: "SET NULL", onUpdate: "CASCADE" });
-// db.Post.belongsTo(db.Account, { foreignKey: "companyId" });
+db.Account.hasMany(db.Post, { foreignKey: "companyId", onDelete: "SET NULL", onUpdate: "CASCADE" });
+db.Post.belongsTo(db.Account, { foreignKey: "companyId" });
 
 // Company relationships
 db.Company.hasOne(db.AboutUs, { foreignKey: "companyId", onDelete: "CASCADE" });
@@ -61,8 +61,8 @@ db.SocialMedia.belongsTo(db.Company, { foreignKey: "companyId" });
 db.Company.hasMany(db.VerificationCode, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.VerificationCode.belongsTo(db.Company, { foreignKey: "companyId" });
 
-db.Company.hasMany(db.Post, { foreignKey: "companyId", onDelete: "SET NULL", onUpdate: "CASCADE" });
-db.Post.belongsTo(db.Company, { foreignKey: "companyId" });
+// db.Company.hasMany(db.Post, { foreignKey: "companyId", onDelete: "SET NULL", onUpdate: "CASCADE" });
+// db.Post.belongsTo(db.Company, { foreignKey: "companyId" });
 
 // Post relationships
 db.Post.hasMany(db.PostImage, { foreignKey: "postId", onDelete: "CASCADE" });

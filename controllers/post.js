@@ -57,17 +57,6 @@ exports.createPost = async (req, res) => {
       status: "pending",
     });
 
-    // const post = await db.Post.create({
-    //   companyId: userId,
-    //   type,
-    //   salePrice: salePrice || null,
-    //   rentPrice: rentPrice || null,
-    //   deposit,
-    //   negotiable: negotiable === "true" || negotiable === true || true,
-    //   mainImageUrl,
-    //   status: "pending",
-    // });
-
     // Handle type-specific data
     if (type === "villa") {
       const { landArea, buildingArea, poolArea, description } = typeSpecificData;
