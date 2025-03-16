@@ -29,6 +29,13 @@ exports.createPost = async (req, res) => {
       return res.status(404).json({ message: "حساب الشركة غير موجود" });
     }
 
+    if (!salePrice && !rentPrice) {
+      return res.status(404).json({ message: "سعر المبيع أو الإيجار مطلوب إحداهما" });
+    }
+    if (!deposit) {
+      return res.status(404).json({ message: "حدد مبلغ الرعبون المطلوب" });
+    }
+
     let mainImageUrl = null;
     if (req.files && req.files.mainImage) {
       mainImageUrl = `/uploads/${req.files.mainImage[0].filename}`;
