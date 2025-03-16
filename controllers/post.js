@@ -49,7 +49,7 @@ exports.createPost = async (req, res) => {
     }
   
     const post = await db.Post.create({
-      companyId: company.companyId, 
+      companyId: account.id, 
       type,
       salePrice: salePrice || null,
       rentPrice: rentPrice || null,
