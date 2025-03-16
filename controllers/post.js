@@ -24,13 +24,11 @@ exports.createPost = async (req, res) => {
     }
 
     const account = await db.Account.findByPk(userId);
-    console.log("Account found:", account ? account.toJSON() : null);
     if (!account || account.role !== "company") {
       return res.status(404).json({ message: "حساب الشركة غير موجود أو ليس شركة" });
     }
 
     const company = await db.Company.findOne({ where: { companyId: userId } });
-    console.log("Company found:", company ? company.toJSON() : null);
     if (!company) {
       return res.status(404).json({ message: "بيانات الشركة غير موجودة" });
     }
@@ -49,7 +47,7 @@ exports.createPost = async (req, res) => {
     }
   
     const post = await db.Post.create({
-      companyId: account.id, 
+      companyId: userId, 
       type,
       salePrice: salePrice || null,
       rentPrice: rentPrice || null,
