@@ -23,6 +23,12 @@ exports.createPost = async (req, res) => {
       return res.status(400).json({ message: "نوع المنشور غير صحيح" });
     }
 
+    // Verify the Account exists and is a company
+    const account = await db.Account.findByPk(userId);
+    if (!account || account.role !== "company") {
+      return res.status(404).json({ message: "حساب الشركة غير موجود أو ليس شركة" });
+    }
+
     // Verify the company exists
     const company = await db.Company.findOne({ where: { companyId: userId } });
     if (!company) {
