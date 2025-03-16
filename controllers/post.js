@@ -42,23 +42,36 @@ exports.createPost = async (req, res) => {
       return res.status(404).json({ message: "حدد مبلغ الرعبون المطلوب" });
     }
 
-    console.log("req.user:", req.user);
 
     let mainImageUrl = null;
     if (req.files && req.files.mainImage) {
       mainImageUrl = `/uploads/${req.files.mainImage[0].filename}`;
     }
   
-    const post = await db.Post.create({
-      companyId: userId,
-      type,
-      salePrice: salePrice || null,
-      rentPrice: rentPrice || null,
-      deposit,
-      negotiable: negotiable === "true" || negotiable === true || true,
-      mainImageUrl,
-      status: "pending",
+    const post = await db.sequelize.transaction(async (t) => {
+      console.log("Creating post with companyId:", userId);
+      return await db.Post.create({
+        companyId: userId,
+        type,
+        salePrice: salePrice || null,
+        rentPrice: rentPrice || null,
+        deposit,
+        negotiable: negotiable === "true" || negotiable === true || true,
+        mainImageUrl,
+        status: "pending",
+      }, { transaction: t });
     });
+
+    // const post = await db.Post.create({
+    //   companyId: userId,
+    //   type,
+    //   salePrice: salePrice || null,
+    //   rentPrice: rentPrice || null,
+    //   deposit,
+    //   negotiable: negotiable === "true" || negotiable === true || true,
+    //   mainImageUrl,
+    //   status: "pending",
+    // });
 
     // Handle type-specific data
     if (type === "villa") {
