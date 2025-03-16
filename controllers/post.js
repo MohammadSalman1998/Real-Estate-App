@@ -36,6 +36,8 @@ exports.createPost = async (req, res) => {
       return res.status(404).json({ message: "حدد مبلغ الرعبون المطلوب" });
     }
 
+    console.log("req.user:", req.user);
+
     let mainImageUrl = null;
     if (req.files && req.files.mainImage) {
       mainImageUrl = `/uploads/${req.files.mainImage[0].filename}`;
