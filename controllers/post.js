@@ -318,6 +318,7 @@ exports.getPostById = async (req, res) => {
     if (userRole === "admin") {
       // Admins see any posts
     } else if (userRole === "user" || userRole === "company") {
+      whereClause.id = PostId;
       whereClause.status = "accepted";
       whereClause.negotiable = true;
     } else {
@@ -374,6 +375,7 @@ exports.getCompanyPostById = async (req, res) => {
     ];
 
     if ( userRole === "company") {
+      whereClause.id = PostId;
       whereClause.companyId = userId;
     } else {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
