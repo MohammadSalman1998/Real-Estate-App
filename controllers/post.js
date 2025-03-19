@@ -325,14 +325,20 @@ exports.getPostById = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    const posts = await db.Post.findOne({
+    const post = await db.Post.findOne({
       where: whereClause,
       include: includeOptions,
     });
 
+    if(!post){
+      res.status(403).json({
+        message: "هذا المنشور غير متاح حاليا",
+      });
+    }
+
     res.status(200).json({
       message: "تم جلب المنشور بنجاح",
-      data: posts,
+      data: post,
     });
   } catch (error) {
     console.error("خطأ في جلب البيانات:", error);
@@ -381,14 +387,20 @@ exports.getCompanyPostById = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    const posts = await db.Post.findOne({
+    const post = await db.Post.findOne({
       where: whereClause,
       include: includeOptions,
     });
 
+    if(!post){
+      res.status(403).json({
+        message: "هذا المنشور غير متاح حاليا",
+      });
+    }
+
     res.status(200).json({
       message: "تم جلب المنشور بنجاح",
-      data: posts,
+      data: post,
     });
   } catch (error) {
     console.error("خطأ في جلب البيانات:", error);
