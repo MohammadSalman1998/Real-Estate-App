@@ -236,12 +236,11 @@ exports.rejectPost = async (req, res) => {
  *  @method GET
  *  @route  ~/api/post
  *  @desc   Get all posts with all related data 
- *  @access public (admin can show all posts - company just owen posts - user just accepted and negotiable posts)
+ *  @access public (admin can show all posts -  user and company just accepted and negotiable posts)
  */
 
 exports.getAllPosts = async (req, res) => {
   const userRole = req.user.role;
-  const userId = req.user.id;
 
   try {
     let whereClause = {};
@@ -261,11 +260,7 @@ exports.getAllPosts = async (req, res) => {
 
     if (userRole === "admin") {
       // Admins see all posts
-    } else if (userRole === "company") {
-      // Companies see only their own posts
-      whereClause.companyId = userId;
-    } else if (userRole === "user") {
-      // Users see only accepted posts with negotiable = true
+    } else if (userRole === "user" || userRole === "company") {
       whereClause.status = "accepted";
       whereClause.negotiable = true;
     } else {
@@ -279,6 +274,118 @@ exports.getAllPosts = async (req, res) => {
 
     res.status(200).json({
       message: "تم جلب المنشورات بنجاح",
+      data: posts,
+    });
+  } catch (error) {
+    console.error("خطأ في جلب البيانات:", error);
+    res.status(500).json({ message: "خطأ في السيرفر", error: error.message });
+  }
+};
+
+/**
+ *  @method GET
+ *  @route  ~/api/post/:id
+ *  @desc   Get post by id
+ *  @access public (admin can show any post - user and company just accepted and negotiable post)
+ */
+
+exports.getPostById = async (req, res) => {
+  const { id } = req.params;
+  const userRole = req.user.role;
+
+  try {
+    const PostId = parseInt(id, 10);
+    if (isNaN(PostId)) {
+      return res.status(400).json({ message: "تأكد من رقم تعريف المنشور" });
+    }
+
+
+    let whereClause = {};
+    let includeOptions = [
+      { model: db.Villa, as: "Villa" },
+      { model: db.CommercialStore, as: "CommercialStore" },
+      { model: db.House, as: "House" },
+      { model: db.PostImage, as: "PostImages" },
+      {
+        model: db.Account,
+        as: "Account",
+        attributes: { exclude: ["password"] }, 
+      },
+      { model: db.Reservation, as: "Reservations" },
+      { model: db.Favorite, as: "Favorites" },
+    ];
+
+    if (userRole === "admin") {
+      // Admins see any posts
+    } else if (userRole === "user" || userRole === "company") {
+      whereClause.status = "accepted";
+      whereClause.negotiable = true;
+    } else {
+      return res.status(403).json({ message: "ليس لديك الصلاحية" });
+    }
+
+    const posts = await db.Post.findOne({
+      where: whereClause,
+      include: includeOptions,
+    });
+
+    res.status(200).json({
+      message: "تم جلب المنشور بنجاح",
+      data: posts,
+    });
+  } catch (error) {
+    console.error("خطأ في جلب البيانات:", error);
+    res.status(500).json({ message: "خطأ في السيرفر", error: error.message });
+  }
+};
+
+/**
+ *  @method GET
+ *  @route  ~/api/post/my/:id
+ *  @desc   Get company owen any post by id
+ *  @access private (company just owen post)
+ */
+
+exports.getCompanyPostById = async (req, res) => {
+  const { id } = req.params;
+  const userRole = req.user.role;
+  const userId = req.user.id;
+
+  try {
+    const PostId = parseInt(id, 10);
+    if (isNaN(PostId)) {
+      return res.status(400).json({ message: "تأكد من رقم تعريف المنشور" });
+    }
+
+
+    let whereClause = {};
+    let includeOptions = [
+      { model: db.Villa, as: "Villa" },
+      { model: db.CommercialStore, as: "CommercialStore" },
+      { model: db.House, as: "House" },
+      { model: db.PostImage, as: "PostImages" },
+      {
+        model: db.Account,
+        as: "Account",
+        attributes: { exclude: ["password"] }, 
+      },
+      { model: db.Reservation, as: "Reservations" },
+      { model: db.Favorite, as: "Favorites" },
+    ];
+
+    if ( userRole === "company") {
+      whereClause.companyId = userId;
+    } else {
+      return res.status(403).json({ message: "ليس لديك الصلاحية" });
+    }
+
+    const posts = await db.Post.findOne({
+      where: whereClause,
+      include: includeOptions,
+    });
+
+    res.status(200).json({
+      message: "تم جلب المنشور بنجاح",
       data: posts,
     });
   } catch (error) {
