@@ -280,7 +280,7 @@ exports.getAllPosts = async (req, res) => {
       // Admins see all posts
     } else if (userRole === "user" || userRole === "company") {
       whereClause.status = "accepted";
-      whereClause.negotiable = true;
+      // whereClause.negotiable = true;
     } else {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
