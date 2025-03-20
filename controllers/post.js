@@ -303,8 +303,8 @@ exports.getPostById = async (req, res) => {
     let whereClause = {};
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStore" },
-      { model: db.House, as: "House" },
+      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
+      { model: db.House, as: "CommercialStoreOrHouse" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
@@ -368,8 +368,8 @@ exports.getCompanyPostById = async (req, res) => {
     let whereClause = {};
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStore" },
-      { model: db.House, as: "House" },
+      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
+      { model: db.House, as: "CommercialStoreOrHouse" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
@@ -428,8 +428,8 @@ exports.getPostsByStatus = async (req, res) => {
     let whereClause = { status };
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStore" },
-      { model: db.House, as: "House" },
+      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
+      { model: db.House, as: "CommercialStoreOrHouse" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
@@ -481,8 +481,8 @@ exports.getPostsByType = async (req, res) => {
     let whereClause = { type };
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStore" },
-      { model: db.House, as: "House" },
+      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
+      { model: db.House, as: "CommercialStoreOrHouse" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
