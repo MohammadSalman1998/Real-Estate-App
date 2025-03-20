@@ -35,6 +35,7 @@ app.use("/api/complaint", require("./routes/complaint"));
 app.use("/api/verificationCode", require("./routes/verificationCode"));
 app.use("/api/reservation", require("./routes/reservation"));
 app.use("/api/wallet", require("./routes/adminWallet"));
+app.use("/api/transaction", require("./routes/transaction"));
 
 // server connection
 const PORT = process.env.PORT || 3000;

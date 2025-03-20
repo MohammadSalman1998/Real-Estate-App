@@ -353,7 +353,7 @@ exports.getPostById = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    const post = await db.Post.findOne({
+    const post = await db.Post.findByPk(PostId,{
       where: whereClause,
       include: includeOptions,
     });
@@ -364,9 +364,16 @@ exports.getPostById = async (req, res) => {
       });
     }
 
+      const postData = post.toJSON(); 
+      // Combine House and CommercialStore into CommercialStoreOrHouse
+      postData.CommercialStoreOrHouse = postData.House || postData.CommercialStore || null;
+      // Remove the original properties
+      delete postData.House;
+      delete postData.CommercialStore;
+
     res.status(200).json({
       message: "تم جلب المنشور بنجاح",
-      data: post,
+      data: postData,
     });
   } catch (error) {
     console.error("خطأ في جلب البيانات:", error);
@@ -414,7 +421,7 @@ exports.getCompanyPostById = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    const post = await db.Post.findOne({
+    const post = await db.Post.findByPk(PostId,{
       where: whereClause,
       include: includeOptions,
     });
@@ -425,9 +432,16 @@ exports.getCompanyPostById = async (req, res) => {
       });
     }
 
+      const postData = post.toJSON(); 
+      // Combine House and CommercialStore into CommercialStoreOrHouse
+      postData.CommercialStoreOrHouse = postData.House || postData.CommercialStore || null;
+      // Remove the original properties
+      delete postData.House;
+      delete postData.CommercialStore;
+
     res.status(200).json({
       message: "تم جلب المنشور بنجاح",
-      data: post,
+      data: postData,
     });
   } catch (error) {
     console.error("خطأ في جلب البيانات:", error);
