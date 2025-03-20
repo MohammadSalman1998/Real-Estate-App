@@ -10,7 +10,15 @@ const { Op } = require("sequelize");
  */
 
 exports.createPost = async (req, res) => {
-  const { type, salePrice, rentPrice, negotiable, rejectionReason,deposit, ...typeSpecificData } = req.body;
+  const {
+    type,
+    salePrice,
+    rentPrice,
+    negotiable,
+    rejectionReason,
+    deposit,
+    ...typeSpecificData
+  } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -25,7 +33,9 @@ exports.createPost = async (req, res) => {
 
     const account = await db.Account.findByPk(userId);
     if (!account || account.role !== "company") {
-      return res.status(404).json({ message: "حساب الشركة غير موجود أو ليس شركة" });
+      return res
+        .status(404)
+        .json({ message: "حساب الشركة غير موجود أو ليس شركة" });
     }
 
     const company = await db.Company.findOne({ where: { companyId: userId } });
@@ -34,20 +44,21 @@ exports.createPost = async (req, res) => {
     }
 
     if (!salePrice && !rentPrice) {
-      return res.status(404).json({ message: "سعر المبيع أو الإيجار مطلوب إحداهما" });
+      return res
+        .status(404)
+        .json({ message: "سعر المبيع أو الإيجار مطلوب إحداهما" });
     }
     if (!deposit) {
       return res.status(404).json({ message: "حدد مبلغ الرعبون المطلوب" });
     }
 
-
     let mainImageUrl = null;
     if (req.files && req.files.mainImage) {
       mainImageUrl = `/uploads/${req.files.mainImage[0].filename}`;
     }
-  
+
     const post = await db.Post.create({
-      companyId: userId, 
+      companyId: userId,
       type,
       salePrice: salePrice || null,
       rentPrice: rentPrice || null,
@@ -59,10 +70,13 @@ exports.createPost = async (req, res) => {
 
     // Handle type-specific data
     if (type === "villa") {
-      const { landArea, buildingArea, poolArea, description } = typeSpecificData;
-      if (!landArea || !buildingArea ) {
+      const { landArea, buildingArea, poolArea, description } =
+        typeSpecificData;
+      if (!landArea || !buildingArea) {
         await post.destroy(); // Rollback if invalid
-        return res.status(400).json({ message: "مطلوب مساحة الارض ومساحة البناء للفيلا" });
+        return res
+          .status(400)
+          .json({ message: "مطلوب مساحة الارض ومساحة البناء للفيلا" });
       }
       await db.Villa.create({
         postId: post.id,
@@ -72,22 +86,26 @@ exports.createPost = async (req, res) => {
         description: description || null,
       });
     } else if (type === "commercial_store") {
-      const { area, location,description } = typeSpecificData;
+      const { area, location, description } = typeSpecificData;
       if (!area || !location) {
         await post.destroy();
-        return res.status(400).json({ message: "المساحة والموقع مطلوبان للمتجر التجاري" });
+        return res
+          .status(400)
+          .json({ message: "المساحة والموقع مطلوبان للمتجر التجاري" });
       }
       await db.CommercialStore.create({
         postId: post.id,
         area,
         location,
-        description
+        description,
       });
     } else if (type === "house") {
       const { area, location, description } = typeSpecificData;
       if (!area || !location) {
         await post.destroy();
-        return res.status(400).json({ message: "المساحة والموقع مطلوبان للمنزل" });
+        return res
+          .status(400)
+          .json({ message: "المساحة والموقع مطلوبان للمنزل" });
       }
       await db.House.create({
         postId: post.id,
@@ -129,7 +147,7 @@ exports.createPost = async (req, res) => {
 /**
  *  @method PUT
  *  @route  ~/api/post/:id/accept
- *  @desc   Accept a post 
+ *  @desc   Accept a post
  *  @access private (admin only)
  */
 
@@ -180,7 +198,7 @@ exports.acceptPost = async (req, res) => {
 /**
  *  @method PUT
  *  @route  ~/api/post/:id/reject
- *  @desc   Reject a post 
+ *  @desc   Reject a post
  *  @access private (admin only)
  */
 
@@ -235,7 +253,7 @@ exports.rejectPost = async (req, res) => {
 /**
  *  @method GET
  *  @route  ~/api/post
- *  @desc   Get all posts with all related data 
+ *  @desc   Get all posts with all related data
  *  @access public (admin can show all posts -  user and company just accepted and negotiable posts)
  */
 
@@ -252,7 +270,7 @@ exports.getAllPosts = async (req, res) => {
       {
         model: db.Account,
         as: "Account",
-        attributes: { exclude: ["password"] }, 
+        attributes: { exclude: ["password"] },
       },
       { model: db.Reservation, as: "Reservations" },
       { model: db.Favorite, as: "Favorites" },
@@ -267,14 +285,25 @@ exports.getAllPosts = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
+
     const posts = await db.Post.findAll({
       where: whereClause,
       include: includeOptions,
     });
 
+    const processedPosts = posts.map((post) => {
+      const postData = post.toJSON(); 
+      // Combine House and CommercialStore into CommercialStoreOrHouse
+      postData.CommercialStoreOrHouse = postData.House || postData.CommercialStore || null;
+      // Remove the original properties
+      delete postData.House;
+      delete postData.CommercialStore;
+      return postData;
+    });
+
     res.status(200).json({
       message: "تم جلب المنشورات بنجاح",
-      data: posts,
+      data: processedPosts,
     });
   } catch (error) {
     console.error("خطأ في جلب البيانات:", error);
@@ -299,17 +328,16 @@ exports.getPostById = async (req, res) => {
       return res.status(400).json({ message: "تأكد من رقم تعريف المنشور" });
     }
 
-
     let whereClause = {};
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
-      { model: db.House, as: "CommercialStoreOrHouse" },
+      { model: db.CommercialStore, as: "CommercialStore" },
+      { model: db.House, as: "House" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
         as: "Account",
-        attributes: { exclude: ["password"] }, 
+        attributes: { exclude: ["password"] },
       },
       { model: db.Reservation, as: "Reservations" },
       { model: db.Favorite, as: "Favorites" },
@@ -330,7 +358,7 @@ exports.getPostById = async (req, res) => {
       include: includeOptions,
     });
 
-    if(!post){
+    if (!post) {
       res.status(403).json({
         message: "هذا المنشور غير متاح حاليا",
       });
@@ -364,23 +392,22 @@ exports.getCompanyPostById = async (req, res) => {
       return res.status(400).json({ message: "تأكد من رقم تعريف المنشور" });
     }
 
-
     let whereClause = {};
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
-      { model: db.House, as: "CommercialStoreOrHouse" },
+      { model: db.CommercialStore, as: "CommercialStore" },
+      { model: db.House, as: "House" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
         as: "Account",
-        attributes: { exclude: ["password"] }, 
+        attributes: { exclude: ["password"] },
       },
       { model: db.Reservation, as: "Reservations" },
       { model: db.Favorite, as: "Favorites" },
     ];
 
-    if ( userRole === "company") {
+    if (userRole === "company") {
       whereClause.id = PostId;
       whereClause.companyId = userId;
     } else {
@@ -392,7 +419,7 @@ exports.getCompanyPostById = async (req, res) => {
       include: includeOptions,
     });
 
-    if(!post){
+    if (!post) {
       res.status(403).json({
         message: "هذا المنشور غير متاح حاليا",
       });
@@ -421,15 +448,20 @@ exports.getPostsByStatus = async (req, res) => {
   const userId = req.user.id;
 
   if (!["pending", "accepted", "rejected"].includes(status)) {
-    return res.status(400).json({ message: "حالة المنشور المدخل خاطئ استخدم [pending, accepted, or rejected]"});
+    return res
+      .status(400)
+      .json({
+        message:
+          "حالة المنشور المدخل خاطئ استخدم [pending, accepted, or rejected]",
+      });
   }
 
   try {
     let whereClause = { status };
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
-      { model: db.House, as: "CommercialStoreOrHouse" },
+      { model: db.CommercialStore, as: "CommercialStore" },
+      { model: db.House, as: "House" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
@@ -474,20 +506,25 @@ exports.getPostsByType = async (req, res) => {
   const userId = req.user.id;
 
   if (!["house", "commercial_store", "villa"].includes(type)) {
-    return res.status(400).json({ message: "نوع المنشور المدخل خاطئ استخدم [house, commercial_store, or villa] " });
+    return res
+      .status(400)
+      .json({
+        message:
+          "نوع المنشور المدخل خاطئ استخدم [house, commercial_store, or villa] ",
+      });
   }
 
   try {
     let whereClause = { type };
     let includeOptions = [
       { model: db.Villa, as: "Villa" },
-      { model: db.CommercialStore, as: "CommercialStoreOrHouse" },
-      { model: db.House, as: "CommercialStoreOrHouse" },
+      { model: db.CommercialStore, as: "CommercialStore" },
+      { model: db.House, as: "House" },
       { model: db.PostImage, as: "PostImages" },
       {
         model: db.Account,
         as: "Account",
-        attributes: { exclude: ["password"] }, 
+        attributes: { exclude: ["password"] },
       },
       { model: db.Reservation, as: "Reservations" },
       { model: db.Favorite, as: "Favorites" },
@@ -530,7 +567,8 @@ exports.getPostsByType = async (req, res) => {
 
 exports.editPost = async (req, res) => {
   const { id } = req.params;
-  const {  salePrice, rentPrice, negotiable,deposit, ...typeSpecificData } = req.body;
+  const { salePrice, rentPrice, negotiable, deposit, ...typeSpecificData } =
+    req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -554,13 +592,24 @@ exports.editPost = async (req, res) => {
     }
 
     // Authorization check
-    if (userRole !== "admin" && (userRole !== "company" || post.companyId !== userId)) {
+    if (
+      userRole !== "admin" &&
+      (userRole !== "company" || post.companyId !== userId)
+    ) {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
     // Validate type if provided
-    if (post.type && !["villa", "commercial_store", "house"].includes(post.type)) {
-      return res.status(400).json({ message: "تأكد من نوع المنشور على أنه (villa, commercial_store, or house) " });
+    if (
+      post.type &&
+      !["villa", "commercial_store", "house"].includes(post.type)
+    ) {
+      return res
+        .status(400)
+        .json({
+          message:
+            "تأكد من نوع المنشور على أنه (villa, commercial_store, or house) ",
+        });
     }
 
     // Handle main image update
@@ -581,12 +630,12 @@ exports.editPost = async (req, res) => {
     });
 
     // Update type-specific data
-    if ( post.type === "villa") {
-
+    if (post.type === "villa") {
       if (post.Villa) {
         await post.Villa.update({
           landArea: typeSpecificData.landArea || post.Villa.landArea,
-          buildingArea: typeSpecificData.buildingArea || post.Villa.buildingArea,
+          buildingArea:
+            typeSpecificData.buildingArea || post.Villa.buildingArea,
           poolArea: typeSpecificData.poolArea || post.Villa.poolArea,
           description: typeSpecificData.description || post.Villa.description,
         });
@@ -599,8 +648,7 @@ exports.editPost = async (req, res) => {
           description: typeSpecificData.description,
         });
       }
-    } else if ( post.type === "commercial_store") {
-
+    } else if (post.type === "commercial_store") {
       if (post.CommercialStore) {
         await post.CommercialStore.update({
           area: typeSpecificData.area || post.CommercialStore.area,
@@ -613,9 +661,11 @@ exports.editPost = async (req, res) => {
           location: typeSpecificData.location,
         });
       }
-    } else if ( post.type === "house") {
+    } else if (post.type === "house") {
       if (!typeSpecificData.area || !typeSpecificData.location) {
-        return res.status(400).json({ message: "المساحة والموقع المطلوب للمنزل" });
+        return res
+          .status(400)
+          .json({ message: "المساحة والموقع المطلوب للمنزل" });
       }
       if (post.House) {
         await post.House.update({
@@ -653,7 +703,11 @@ exports.editPost = async (req, res) => {
         { model: db.CommercialStore, as: "CommercialStore" },
         { model: db.House, as: "House" },
         { model: db.PostImage, as: "PostImages" },
-        { model: db.Account, as: "Account", attributes: { exclude: ["password"] } },
+        {
+          model: db.Account,
+          as: "Account",
+          attributes: { exclude: ["password"] },
+        },
         { model: db.Reservation, as: "Reservations" },
         { model: db.Favorite, as: "Favorites" },
       ],
@@ -669,11 +723,10 @@ exports.editPost = async (req, res) => {
   }
 };
 
-
 /**
  *  @method DELETE
  *  @route  ~/api/post/:id
- *  @desc   Delete a post 
+ *  @desc   Delete a post
  *  @access private (admin or company owner)
  */
 
@@ -694,7 +747,10 @@ exports.deletePost = async (req, res) => {
     }
 
     // Authorization check
-    if (userRole !== "admin" && (userRole !== "company" || post.companyId !== userId)) {
+    if (
+      userRole !== "admin" &&
+      (userRole !== "company" || post.companyId !== userId)
+    ) {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
@@ -713,7 +769,7 @@ exports.deletePost = async (req, res) => {
  *  @method GET
  *  @route  ~/api/post/filter?
  *  @desc   filter of posts
- *  @access public 
+ *  @access public
  */
 
 exports.filterPosts = async (req, res) => {
@@ -741,7 +797,7 @@ exports.filterPosts = async (req, res) => {
     if (userRole === "admin" || userRole === "company" || userRole === "user") {
       whereClause.status = "accepted";
       whereClause.negotiable = true;
-    }  else {
+    } else {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
@@ -752,18 +808,35 @@ exports.filterPosts = async (req, res) => {
       }
       whereClause.type = query.type;
     }
-    if (query.status && userRole !== "user") { // Users can't filter by status
+    if (query.status && userRole !== "user") {
+      // Users can't filter by status
       if (!["pending"].includes(query.status)) {
-        return res.status(400).json({ message: "Invalid status. Use pending, accepted, or rejected" });
+        return res
+          .status(400)
+          .json({
+            message: "Invalid status. Use pending, accepted, or rejected",
+          });
       }
       whereClause.status = query.status;
     }
-    if (query.salePriceMin) whereClause.salePrice = { [Op.gte]: parseFloat(query.salePriceMin) };
-    if (query.salePriceMax) whereClause.salePrice = { ...whereClause.salePrice, [Op.lte]: parseFloat(query.salePriceMax) };
-    if (query.rentPriceMin) whereClause.rentPrice = { [Op.gte]: parseFloat(query.rentPriceMin) };
-    if (query.rentPriceMax) whereClause.rentPrice = { ...whereClause.rentPrice, [Op.lte]: parseFloat(query.rentPriceMax) };
-    if (query.negotiable && userRole !== "user") { // Users can't filter negotiable (fixed to true)
-      whereClause.negotiable = query.negotiable === "true" || query.negotiable === true;
+    if (query.salePriceMin)
+      whereClause.salePrice = { [Op.gte]: parseFloat(query.salePriceMin) };
+    if (query.salePriceMax)
+      whereClause.salePrice = {
+        ...whereClause.salePrice,
+        [Op.lte]: parseFloat(query.salePriceMax),
+      };
+    if (query.rentPriceMin)
+      whereClause.rentPrice = { [Op.gte]: parseFloat(query.rentPriceMin) };
+    if (query.rentPriceMax)
+      whereClause.rentPrice = {
+        ...whereClause.rentPrice,
+        [Op.lte]: parseFloat(query.rentPriceMax),
+      };
+    if (query.negotiable && userRole !== "user") {
+      // Users can't filter negotiable (fixed to true)
+      whereClause.negotiable =
+        query.negotiable === "true" || query.negotiable === true;
     }
 
     // Type-specific filtering (requires joining with related tables)
@@ -771,34 +844,60 @@ exports.filterPosts = async (req, res) => {
     let commercialStoreWhere = {};
     let houseWhere = {};
 
-    if (query.landAreaMin) villaWhere.landArea = { [Op.gte]: parseFloat(query.landAreaMin) };
-    if (query.landAreaMax) villaWhere.landArea = { ...villaWhere.landArea, [Op.lte]: parseFloat(query.landAreaMax) };
-    if (query.buildingAreaMin) villaWhere.buildingArea = { [Op.gte]: parseFloat(query.buildingAreaMin) };
-    if (query.buildingAreaMax) villaWhere.buildingArea = { ...villaWhere.buildingArea, [Op.lte]: parseFloat(query.buildingAreaMax) };
-    if (query.poolAreaMin) villaWhere.poolArea = { [Op.gte]: parseFloat(query.poolAreaMin) };
-    if (query.poolAreaMax) villaWhere.poolArea = { ...villaWhere.poolArea, [Op.lte]: parseFloat(query.poolAreaMax) };
-    if (query.description) villaWhere.description = { [Op.like]: `%${query.description}%` };
+    if (query.landAreaMin)
+      villaWhere.landArea = { [Op.gte]: parseFloat(query.landAreaMin) };
+    if (query.landAreaMax)
+      villaWhere.landArea = {
+        ...villaWhere.landArea,
+        [Op.lte]: parseFloat(query.landAreaMax),
+      };
+    if (query.buildingAreaMin)
+      villaWhere.buildingArea = { [Op.gte]: parseFloat(query.buildingAreaMin) };
+    if (query.buildingAreaMax)
+      villaWhere.buildingArea = {
+        ...villaWhere.buildingArea,
+        [Op.lte]: parseFloat(query.buildingAreaMax),
+      };
+    if (query.poolAreaMin)
+      villaWhere.poolArea = { [Op.gte]: parseFloat(query.poolAreaMin) };
+    if (query.poolAreaMax)
+      villaWhere.poolArea = {
+        ...villaWhere.poolArea,
+        [Op.lte]: parseFloat(query.poolAreaMax),
+      };
+    if (query.description)
+      villaWhere.description = { [Op.like]: `%${query.description}%` };
 
     if (query.areaMin) {
       commercialStoreWhere.area = { [Op.gte]: parseFloat(query.areaMin) };
       houseWhere.area = { [Op.gte]: parseFloat(query.areaMin) };
     }
     if (query.areaMax) {
-      commercialStoreWhere.area = { ...commercialStoreWhere.area, [Op.lte]: parseFloat(query.areaMax) };
-      houseWhere.area = { ...houseWhere.area, [Op.lte]: parseFloat(query.areaMax) };
+      commercialStoreWhere.area = {
+        ...commercialStoreWhere.area,
+        [Op.lte]: parseFloat(query.areaMax),
+      };
+      houseWhere.area = {
+        ...houseWhere.area,
+        [Op.lte]: parseFloat(query.areaMax),
+      };
     }
     if (query.location) {
       commercialStoreWhere.location = { [Op.like]: `%${query.location}%` };
       houseWhere.location = { [Op.like]: `%${query.location}%` };
     }
-    if (query.description) houseWhere.description = { [Op.like]: `%${query.description}%` };
+    if (query.description)
+      houseWhere.description = { [Op.like]: `%${query.description}%` };
 
     // Apply where clauses to includes
-    includeOptions = includeOptions.map(include => {
+    includeOptions = includeOptions.map((include) => {
       if (include.model === db.Villa && Object.keys(villaWhere).length > 0) {
         return { ...include, where: villaWhere };
       }
-      if (include.model === db.CommercialStore && Object.keys(commercialStoreWhere).length > 0) {
+      if (
+        include.model === db.CommercialStore &&
+        Object.keys(commercialStoreWhere).length > 0
+      ) {
         return { ...include, where: commercialStoreWhere };
       }
       if (include.model === db.House && Object.keys(houseWhere).length > 0) {
