@@ -276,11 +276,8 @@ exports.getAllPosts = async (req, res) => {
       { model: db.Favorite, as: "Favorites" },
     ];
 
-    if (userRole === "admin") {
-      // Admins see all posts
-    } else if (userRole === "user" || userRole === "company") {
+    if (userRole === "admin" || userRole === "user" || userRole === "company") {
       whereClause.status = "accepted";
-      // whereClause.negotiable = true;
     } else {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
