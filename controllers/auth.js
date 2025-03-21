@@ -591,7 +591,7 @@ exports.getAccountById = async (req, res) => {
           authCode: company.authCode,
           walletBalance: company.walletBalance,
           profileImageUrl: company.profileImageUrl,
-          companyID: company.companyID
+          companyID: company.id
         });
       }
     } else if (account.role === "user") {
@@ -600,7 +600,7 @@ exports.getAccountById = async (req, res) => {
         Object.assign(combinedData, {
           profileImageUrl: customer.profileImageUrl,
           walletBalance: customer.walletBalance,
-          customerId: customer.customerId
+          customerId: customer.id
         });
       }
     }
