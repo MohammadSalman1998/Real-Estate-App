@@ -43,7 +43,7 @@ exports.createAboutUs = async (req, res) => {
     }
 
     const aboutUs = await db.AboutUs.create({
-      companyId: userId,
+      companyId,
       description,
       mission: mission || null,
       vision: vision || null,

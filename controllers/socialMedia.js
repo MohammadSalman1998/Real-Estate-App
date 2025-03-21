@@ -47,7 +47,7 @@ exports.createSocialMedia = async (req, res) => {
     }
 
     const socialMedia = await db.SocialMedia.create({
-      companyId: userId,
+      companyId: finalCompanyId,
       facebook: facebook || null,
       twitter: twitter || null,
       instagram: instagram || null,
