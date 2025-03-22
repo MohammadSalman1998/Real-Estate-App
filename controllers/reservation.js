@@ -1,4 +1,5 @@
 const db = require("../models");
+const schedule = require('node-schedule'); 
 
 /**
  *  @method POST
@@ -7,8 +8,10 @@ const db = require("../models");
  *  @access private (User only)
  */
 
+
+
 exports.createReservation = async (req, res) => {
-  const { postId } = req.body; 
+  const { postId } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -17,7 +20,7 @@ exports.createReservation = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    if (!postId ) {
+    if (!postId) {
       return res.status(400).json({ message: "مطلوب معرف المنشور" });
     }
 
@@ -62,7 +65,7 @@ exports.createReservation = async (req, res) => {
       }
 
       // Determine the amount based on type (rent or sale)
-      const amount =  post.deposit 
+      const amount = post.deposit;
       if (!amount || amount <= 0) {
         throw new Error(`لا يوجد سعر صالح للمنشور`);
       }
@@ -75,7 +78,6 @@ exports.createReservation = async (req, res) => {
       if (customer.walletBalance < amount) {
         throw new Error("رصيد المحفظة غير كافٍ");
       }
-
 
       // Update wallets with explicit DECIMAL handling
       await customer.update(
@@ -96,7 +98,6 @@ exports.createReservation = async (req, res) => {
         { negotiable: false },
         { transaction: t }
       );
-
 
       // Create reservation with the full amount as depositAmount
       const reservation = await db.Reservation.create(
@@ -120,7 +121,24 @@ exports.createReservation = async (req, res) => {
         { transaction: t }
       );
 
-      return { reservation, transaction };
+      return { reservation, transaction, post };
+    });
+
+    // Schedule the negotiable status to revert to true after 48 hours
+    // const revertNegotiableDate = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours from now
+    const revertNegotiableDate = new Date(Date.now() + 60 * 1000); // 1 minute from now
+    schedule.scheduleJob(revertNegotiableDate, async () => {
+      try {
+        const post = await db.Post.findByPk(postIdInt);
+        if (post && post.status === "accepted") { // Only revert if post still exists and is accepted
+          await post.update({ negotiable: true });
+          console.log(`Post ${postIdInt} negotiable status reverted to true`);
+        } else {
+          console.log(`Post ${postIdInt} was deleted or not eligible for negotiable revert`);
+        }
+      } catch (error) {
+        console.error(`Error reverting negotiable status for post ${postIdInt}:`, error);
+      }
     });
 
     res.status(201).json({
@@ -135,6 +153,136 @@ exports.createReservation = async (req, res) => {
     res.status(500).json({ message: "خطأ في الخادم", error: error.message });
   }
 };
+
+
+// exports.createReservation = async (req, res) => {
+//   const { postId } = req.body; 
+//   const userRole = req.user.role;
+//   const userId = req.user.id;
+
+//   try {
+//     if (userRole !== "user") {
+//       return res.status(403).json({ message: "ليس لديك الصلاحية" });
+//     }
+
+//     if (!postId ) {
+//       return res.status(400).json({ message: "مطلوب معرف المنشور" });
+//     }
+
+//     const postIdInt = parseInt(postId, 10);
+//     if (isNaN(postIdInt)) {
+//       return res.status(400).json({ message: "معرف المنشور غير صالح" });
+//     }
+
+//     // Start a transaction to ensure atomicity
+//     const result = await db.sequelize.transaction(async (t) => {
+//       // Fetch user’s customer (with walletBalance)
+//       const customer = await db.Customer.findOne({ where: { customerId: userId }, transaction: t });
+//       if (!customer) {
+//         throw new Error("لم يتم العثور على ملف تعريف المستخدم");
+//       }
+
+//       // Fetch post and company (with walletBalance)
+//       const post = await db.Post.findByPk(postIdInt, {
+//         include: [{ model: db.Account, as: "Account" }],
+//         transaction: t,
+//       });
+//       if (!post || post.status !== "accepted" || !post.negotiable) {
+//         throw new Error("لم يتم العثور على المنشور أو غير متاح للحجز");
+//       }
+//       const companyId = post.companyId;
+//       if (!companyId) {
+//         throw new Error("الشركة غير مرتبطة بهذا العقار");
+//       }
+//       const company = await db.Company.findOne({ where: { companyId }, transaction: t });
+//       if (!company) {
+//         throw new Error("لم يتم العثور على ملف تعريف الشركة");
+//       }
+
+//       // Fetch admin and admin wallet
+//       const adminAccount = await db.Account.findOne({ where: { role: "admin" }, transaction: t });
+//       if (!adminAccount) {
+//         throw new Error("لم يتم العثور على ملف تعريف المدير");
+//       }
+//       const adminWallet = await db.Wallet.findOne({ where: { adminId: adminAccount.id }, transaction: t });
+//       if (!adminWallet) {
+//         throw new Error("لم يتم العثور على محفظة المسؤول");
+//       }
+
+//       // Determine the amount based on type (rent or sale)
+//       const amount =  post.deposit 
+//       if (!amount || amount <= 0) {
+//         throw new Error(`لا يوجد سعر صالح للمنشور`);
+//       }
+
+//       // Calculate admin fee and company amount
+//       const adminFee = amount * 0.10; // 10% to admin
+//       const companyAmount = amount - adminFee; // 90% to company
+
+//       // Check user’s wallet balance
+//       if (customer.walletBalance < amount) {
+//         throw new Error("رصيد المحفظة غير كافٍ");
+//       }
+
+
+//       // Update wallets with explicit DECIMAL handling
+//       await customer.update(
+//         { walletBalance: parseFloat(customer.walletBalance) - amount },
+//         { transaction: t }
+//       );
+//       await company.update(
+//         { walletBalance: parseFloat(company.walletBalance) + companyAmount },
+//         { transaction: t }
+//       );
+//       await adminWallet.update(
+//         { walletBalance: parseFloat(adminWallet.walletBalance) + adminFee },
+//         { transaction: t }
+//       );
+
+//       // Set post negotiable to false
+//       await post.update(
+//         { negotiable: false },
+//         { transaction: t }
+//       );
+
+
+//       // Create reservation with the full amount as depositAmount
+//       const reservation = await db.Reservation.create(
+//         {
+//           postId: postIdInt,
+//           customerId: customer.id,
+//           depositAmount: amount, // Full rentPrice or salePrice
+//         },
+//         { transaction: t }
+//       );
+
+//       // Create transaction record
+//       const transaction = await db.Transaction.create(
+//         {
+//           customerId: customer.id,
+//           companyId: companyId,
+//           reservationId: reservation.id,
+//           amountReceived: companyAmount,
+//           adminFee,
+//         },
+//         { transaction: t }
+//       );
+
+//       return { reservation, transaction };
+//     });
+
+//     res.status(201).json({
+//       message: "تمت معالجة الحجز والدفع بنجاح",
+//       data: {
+//         reservation: result.reservation,
+//         transaction: result.transaction,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in createReservation:", error);
+//     res.status(500).json({ message: "خطأ في الخادم", error: error.message });
+//   }
+// };
 
 /**
  *  @method GET
