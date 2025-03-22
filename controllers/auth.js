@@ -208,15 +208,29 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "الإيميل أو كلمة المرور غير صحيحة" });
     }
 
+    let additionalId = null;
+    if (account.role === "user") {
+      const customer = await db.Customer.findOne({ where: { customerId: account.id } });
+      additionalId = customer ? customer.id : null; // Customer table's primary key (id)
+    } else if (account.role === "company") {
+      const company = await db.Company.findOne({ where: { companyId: account.id } });
+      additionalId = company ? company.id : null; // Company table's primary key (id)
+    }
+
     const token = jwt.sign(
       { id: account.id, role: account.role, name: account.name },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({
-      message: "تم تسجيل الدحول بنجاح",
-      data: { role: account.role, id: account.id },
+   res.status(200).json({
+      message: "تم تسجيل الدخول بنجاح",
+      data: {
+        role: account.role,
+        id: account.id, // Account table's id
+        ...(account.role === "user" && { customerId: additionalId }), // Customer table's id
+        ...(account.role === "company" && { companyId: additionalId }), // Company table's id
+      },
       token,
     });
   } catch (error) {
@@ -554,7 +568,7 @@ exports.getAllAccounts = async (req, res) => {
 
 exports.getAccountById = async (req, res) => {
   const { id } = req.params;
-  const userRole = req.user.role;
+  const userRole = req.user.role; // "admin", "company", or "user"
   const userId = req.user.id;
 
   try {
@@ -563,16 +577,25 @@ exports.getAccountById = async (req, res) => {
       return res.status(400).json({ message: "رقم الحساب غير صحيح" });
     }
 
-    // Authorization: Admin can view any account, others can only view their own
-    if (userRole !== "admin" && accountId !== userId) {
-      return res.status(403).json({ message: "ليس لديك الصلاحية" });
-    }
-
+    // Fetch the requested account
     const account = await db.Account.findByPk(accountId);
     if (!account) {
       return res.status(404).json({ message: "هذا الحساب غير موجود" });
     }
 
+    // Authorization Logic
+    if (userRole === "admin") {
+      // Admin can view any account
+    } else if (userRole === "company" || userRole === "user") {
+      // Companies and users can view their own account or any company account
+      if (accountId !== userId && account.role !== "company") {
+        return res.status(403).json({ message: "ليس لديك الصلاحية" });
+      }
+    } else {
+      return res.status(403).json({ message: "ليس لديك الصلاحية" });
+    }
+
+    // Base account data
     let combinedData = {
       id: account.id,
       name: account.name,
@@ -582,16 +605,17 @@ exports.getAccountById = async (req, res) => {
       createdAt: account.createdAt,
     };
 
+    // Include additional data based on role
     if (account.role === "company") {
       const company = await db.Company.findOne({ where: { companyId: accountId } });
       if (company) {
-        Object.assign(combinedData, { 
+        Object.assign(combinedData, {
           webSiteURL: company.webSiteURL,
           location: company.location,
           authCode: company.authCode,
-          walletBalance: company.walletBalance,
+          // walletBalance: company.walletBalance,
           profileImageUrl: company.profileImageUrl,
-          companyID: company.id
+          companyID: company.id,
         });
       }
     } else if (account.role === "user") {
@@ -600,7 +624,7 @@ exports.getAccountById = async (req, res) => {
         Object.assign(combinedData, {
           profileImageUrl: customer.profileImageUrl,
           walletBalance: customer.walletBalance,
-          customerId: customer.id
+          customerId: customer.id,
         });
       }
     }
