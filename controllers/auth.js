@@ -613,7 +613,7 @@ exports.getAccountById = async (req, res) => {
           webSiteURL: company.webSiteURL,
           location: company.location,
           authCode: company.authCode,
-          // walletBalance: company.walletBalance,
+          walletBalance: company.walletBalance,
           profileImageUrl: company.profileImageUrl,
           companyID: company.id,
         });
