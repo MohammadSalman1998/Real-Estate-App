@@ -286,6 +286,41 @@ exports.createReservation = async (req, res) => {
 
 /**
  *  @method GET
+ *  @route  ~/api/reservation
+ *  @desc   Read User’s Reservations
+ *  @access private (admin only)
+ */
+
+exports.getReservations = async (req, res) => {
+  const userRole = req.user.role;
+  const userId = req.user.id;
+
+  try {
+    if (userRole !== "admin") {
+      return res.status(403).json({ message: "ليس لديك الصلاحية" });
+    }
+
+
+    const reservations = await db.Reservation.findAll({
+      include: [
+        { model: db.Customer, as: "Customer",attributes: { exclude: ["walletBalance"] }, include: [{ model: db.Account, as: "Account", attributes: { exclude: ["password"] } }] },
+        { model: db.Post, as: "Post", include: [{ model: db.Account, as: "Account", attributes: { exclude: ["password"] } }] },
+       
+      ],
+    });
+
+    res.status(200).json({
+      message: "تم جلب البيانات بنجاح",
+      data: reservations,
+    });
+  } catch (error) {
+    console.error("Error in getReservations:", error);
+    res.status(500).json({ message: "خطأ في الخادم", error: error.message });
+  }
+};
+
+/**
+ *  @method GET
  *  @route  ~/api/reservation/my
  *  @desc   Read User’s Reservations
  *  @access private (User only)
