@@ -126,7 +126,7 @@ exports.createReservation = async (req, res) => {
 
     // Schedule the negotiable status to revert to true after 48 hours
     // const revertNegotiableDate = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours from now
-    const revertNegotiableDate = new Date(Date.now() + 60 * 1000); // 1 minute from now
+    const revertNegotiableDate = new Date(Date.now() + 5 * 60 * 1000); // 1 minute from now
     schedule.scheduleJob(revertNegotiableDate, async () => {
       try {
         const post = await db.Post.findByPk(postIdInt);
