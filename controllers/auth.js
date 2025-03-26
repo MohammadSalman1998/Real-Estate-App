@@ -364,7 +364,7 @@ exports.editAccount = async (req, res) => {
         }
         accountUpdates.password = await bcrypt.hash(password, 10);
       }
-      if (email || phone) {
+      if (email) {
         return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل، المبلغ في المحفظة، معلومات عنا، ووسائل التواصل الاجتماعي" });
       }
       if (isActive !== undefined) {
@@ -425,13 +425,15 @@ exports.editAccount = async (req, res) => {
         if (webSiteURL) companyUpdates.webSiteURL = webSiteURL;
         if (location) companyUpdates.location = location;
         if (authCode) companyUpdates.authCode = authCode;
-        if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
+        if (walletBalance !== undefined)     return res.status(403).json({ message: "ليس لديك الصلاحية" });
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
       } else if (userRole === "company") {
+        if (webSiteURL) companyUpdates.webSiteURL = webSiteURL;
+        if (location) companyUpdates.location = location;
         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
         if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
-        if (address || location || webSiteURL || authCode) {
-          return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل، المبلغ في المحفظة، معلومات عنا، ووسائل التواصل الاجتماعي" });
+        if ( authCode) {
+          return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: جميع البيانات عدا الأيميل و رقم السجل التجاري" });
         }
       }
       await company.update(companyUpdates);
