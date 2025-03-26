@@ -40,6 +40,7 @@ router.post(
   ]),
   createPost
 );
+router.get("/filter", auth(), filterPosts);
 router.put("/:id/accept", auth(), acceptPost);
 router.put("/:id/reject", auth(), rejectPost);
 router.get("/", auth(), getAllPosts);              
@@ -54,6 +55,5 @@ router.put(
   editPost
 );
 router.delete("/:id", auth(), deletePost);
-router.get("/filter", auth(), filterPosts);
 
 module.exports = router;

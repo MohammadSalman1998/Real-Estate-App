@@ -268,10 +268,11 @@ exports.logout = async (req, res) => {
  *  @access private 
  */
 
+
 exports.editAccount = async (req, res) => {
   const { id } = req.params;
   const {
-    name, email, password, phone, address, location, webSiteURL, authCode, walletBalance, profileImageUrl,
+    name, email, password, oldPassword, phone, address, location, webSiteURL, authCode, walletBalance, profileImageUrl,
     description, mission, vision, // AboutUs fields
     facebook, twitter, instagram, whatsapp, telegram, linkedin // SocialMedia fields
   } = req.body;
@@ -308,20 +309,44 @@ exports.editAccount = async (req, res) => {
       if (phone && (phone.length >= 7 && phone.length <= 20)) accountUpdates.phone = phone;
       else if (phone) return res.status(400).json({ message: "رقم الهاتف يجب ان يكون بين 7 و 20 رقم" });
     }
-    // Customer can edit all Account fields
+    // Customer (user) can edit Account fields with old password verification
     else if (userRole === "user" && account.role === "user") {
       if (name) accountUpdates.name = name;
       if (email && validator.isEmail(email)) accountUpdates.email = email;
       else if (email) return res.status(400).json({ message: "صيغة الإيميل غير صحيحة" });
-      if (password && password.length >= 6) accountUpdates.password = await bcrypt.hash(password, 10);
-      else if (password) return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+      if (password) {
+        if (!oldPassword) {
+          return res.status(400).json({ message: "يرجى تقديم كلمة المرور القديمة لتغيير كلمة المرور" });
+        }
+        const isMatch = await bcrypt.compare(oldPassword, account.password);
+        if (!isMatch) {
+          return res.status(400).json({ message: "كلمة المرور القديمة غير صحيحة" });
+        }
+        if (password.length < 6) {
+          return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+        }
+        accountUpdates.password = await bcrypt.hash(password, 10);
+      }
       if (phone && (phone.length >= 7 && phone.length <= 20)) accountUpdates.phone = phone;
       else if (phone) return res.status(400).json({ message: "رقم الهاتف يجب ان يكون بين 7 و 20 رقم" });
     }
-    // Company can edit name, profileImageUrl, walletBalance, AboutUs, and SocialMedia
+    // Company can edit limited fields with old password verification
     else if (userRole === "company" && account.role === "company") {
       if (name) accountUpdates.name = name;
-      if (email || password || phone) {
+      if (password) {
+        if (!oldPassword) {
+          return res.status(400).json({ message: "يرجى تقديم كلمة المرور القديمة لتغيير كلمة المرور" });
+        }
+        const isMatch = await bcrypt.compare(oldPassword, account.password);
+        if (!isMatch) {
+          return res.status(400).json({ message: "كلمة المرور القديمة غير صحيحة" });
+        }
+        if (password.length < 6) {
+          return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+        }
+        accountUpdates.password = await bcrypt.hash(password, 10);
+      }
+      if (email || phone) {
         return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل، المبلغ في المحفظة، معلومات عنا، ووسائل التواصل الاجتماعي" });
       }
     } else {
@@ -489,6 +514,230 @@ exports.editAccount = async (req, res) => {
     res.status(500).json({ message: "خطأ من الخادم", error: error.message });
   }
 };
+
+// exports.editAccount = async (req, res) => {
+//   const { id } = req.params;
+//   const {
+//     name, email, password, phone, address, location, webSiteURL, authCode, walletBalance, profileImageUrl,
+//     description, mission, vision, // AboutUs fields
+//     facebook, twitter, instagram, whatsapp, telegram, linkedin // SocialMedia fields
+//   } = req.body;
+//   const userRole = req.user.role; // From JWT
+//   const userId = req.user.id;     // From JWT
+
+//   let prevWalletBalance;
+//   try {
+//     const accountId = parseInt(id, 10);
+//     if (isNaN(accountId)) {
+//       return res.status(400).json({ message: "رقم الحساب غير صحيح" });
+//     }
+
+//     // Authorization check
+//     if (userRole !== "admin" && accountId !== userId) {
+//       return res.status(403).json({ message: "ليس لديك الصلاحية" });
+//     }
+
+//     const account = await db.Account.findByPk(accountId);
+//     if (!account) {
+//       return res.status(404).json({ message: "هذا الحساب غير موجود" });
+//     }
+
+//     // Define allowed updates based on role
+//     const accountUpdates = {};
+
+//     // Admin can edit everything
+//     if (userRole === "admin") {
+//       if (name) accountUpdates.name = name;
+//       if (email && validator.isEmail(email)) accountUpdates.email = email;
+//       else if (email) return res.status(400).json({ message: "صيغة الإيميل غير صحيحة" });
+//       if (password && password.length >= 6) accountUpdates.password = await bcrypt.hash(password, 10);
+//       else if (password) return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+//       if (phone && (phone.length >= 7 && phone.length <= 20)) accountUpdates.phone = phone;
+//       else if (phone) return res.status(400).json({ message: "رقم الهاتف يجب ان يكون بين 7 و 20 رقم" });
+//     }
+//     // Customer can edit all Account fields
+//     else if (userRole === "user" && account.role === "user") {
+//       if (name) accountUpdates.name = name;
+//       if (email && validator.isEmail(email)) accountUpdates.email = email;
+//       else if (email) return res.status(400).json({ message: "صيغة الإيميل غير صحيحة" });
+//       if (password && password.length >= 6) accountUpdates.password = await bcrypt.hash(password, 10);
+//       else if (password) return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+//       if (phone && (phone.length >= 7 && phone.length <= 20)) accountUpdates.phone = phone;
+//       else if (phone) return res.status(400).json({ message: "رقم الهاتف يجب ان يكون بين 7 و 20 رقم" });
+//     }
+//     // Company can edit name, profileImageUrl, walletBalance, AboutUs, and SocialMedia
+//     else if (userRole === "company" && account.role === "company") {
+//       if (name) accountUpdates.name = name;
+//       if (password && password.length >= 6) accountUpdates.password = await bcrypt.hash(password, 10);
+//       else if (password) return res.status(400).json({ message: "كلمة المرور يجب ان تكون على الأقل 6 أحرف" });
+//       if (email || phone) {
+//         return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل، المبلغ في المحفظة، معلومات عنا، ووسائل التواصل الاجتماعي" });
+//       }
+//     } else {
+//       return res.status(403).json({ message: "ليس لديك الصلاحية" });
+//     }
+
+//     // Apply Account updates
+//     await account.update(accountUpdates);
+
+//     // Handle profile image
+//     let newProfileImageUrl = null;
+//     if (req.file) {
+//       newProfileImageUrl = `/uploads/${req.file.filename}`;
+//     }
+
+//     let combinedData = {
+//       id: account.id,
+//       name: account.name,
+//       email: account.email,
+//       phone: account.phone || null,
+//       role: account.role,
+//       createdAt: account.createdAt,
+//     };
+
+//     if (account.role === "company") {
+//       const company = await db.Company.findOne({ where: { companyId: accountId } });
+//       prevWalletBalance = company.walletBalance;
+//       if (!company) return res.status(404).json({ message: "هذا الحساب غير موجود" });
+
+//       // Validate webSiteURL
+//       if (webSiteURL && !/^(http:\/\/|https:\/\/)/i.test(webSiteURL)) {
+//         return res.status(400).json({
+//           message: "عنوان موقع الويب يجب أن يبدأ بـ 'http://' أو 'https://'",
+//         });
+//       }
+
+//       // Validation function for social media URLs
+//       const validateUrl = (url) => {
+//         if (url === undefined || url === null) return true; // Allow undefined/null
+//         return /^(http:\/\/|https:\/\/)/i.test(url);
+//       };
+
+//       // Check social media fields
+//       const socialMediaFields = { facebook, twitter, instagram, whatsapp, telegram, linkedin };
+//       for (const [field, value] of Object.entries(socialMediaFields)) {
+//         if (value !== undefined && !validateUrl(value)) {
+//           return res.status(400).json({
+//             message: `رابط ${field} يجب أن يبدأ بـ "http://" أو "https://"`
+//           });
+//         }
+//       }
+
+//       const companyUpdates = {};
+//       if (userRole === "admin") {
+//         if (webSiteURL) companyUpdates.webSiteURL = webSiteURL;
+//         if (location) companyUpdates.location = location;
+//         if (authCode) companyUpdates.authCode = authCode;
+//         if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
+//         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
+//       } else if (userRole === "company") {
+//         if (newProfileImageUrl) companyUpdates.profileImageUrl = newProfileImageUrl;
+//         if (walletBalance !== undefined) companyUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
+//         if (address || location || webSiteURL || authCode) {
+//           return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل، المبلغ في المحفظة، معلومات عنا، ووسائل التواصل الاجتماعي" });
+//         }
+//       }
+//       await company.update(companyUpdates);
+
+//       // Handle AboutUs
+//       let aboutUs = await db.AboutUs.findOne({ where: { companyId: company.id } });
+//       if (userRole === "admin" || userRole === "company") {
+//         if (description || mission !== undefined || vision !== undefined) {
+//           if (aboutUs) {
+//             await aboutUs.update({
+//               description: description || aboutUs.description,
+//               mission: mission !== undefined ? mission : aboutUs.mission,
+//               vision: vision !== undefined ? vision : aboutUs.vision,
+//             });
+//           } else {
+//             aboutUs = await db.AboutUs.create({
+//               companyId: company.id,
+//               description: description || "",
+//               mission: mission || "",
+//               vision: vision || "",
+//             });
+//           }
+//         }
+//       }
+
+//       // Handle SocialMedia
+//       let socialMedia = await db.SocialMedia.findOne({ where: { companyId: company.id } });
+//       if (userRole === "admin" || userRole === "company") {
+//         if (facebook !== undefined || twitter !== undefined || instagram !== undefined || whatsapp !== undefined || telegram !== undefined || linkedin !== undefined) {
+//           if (socialMedia) {
+//             await socialMedia.update({
+//               facebook: facebook !== undefined ? facebook : socialMedia.facebook,
+//               twitter: twitter !== undefined ? twitter : socialMedia.twitter,
+//               instagram: instagram !== undefined ? instagram : socialMedia.instagram,
+//               whatsapp: whatsapp !== undefined ? whatsapp : socialMedia.whatsapp,
+//               telegram: telegram !== undefined ? telegram : socialMedia.telegram,
+//               linkedin: linkedin !== undefined ? linkedin : socialMedia.linkedin,
+//             });
+//           } else {
+//             socialMedia = await db.SocialMedia.create({
+//               companyId: company.id,
+//               facebook: facebook || null,
+//               twitter: twitter || null,
+//               instagram: instagram || null,
+//               whatsapp: whatsapp || null,
+//               telegram: telegram || null,
+//               linkedin: linkedin || null,
+//             });
+//           }
+//         }
+//       }
+
+//       // Merge Company, AboutUs, and SocialMedia data into response
+//       Object.assign(combinedData, {
+//         webSiteURL: company.webSiteURL,
+//         location: company.location,
+//         authCode: company.authCode,
+//         walletBalance: company.walletBalance,
+//         profileImageUrl: company.profileImageUrl,
+//         aboutUs: aboutUs ? {
+//           description: aboutUs.description,
+//           mission: aboutUs.mission,
+//           vision: aboutUs.vision,
+//         } : null,
+//         socialMedia: socialMedia ? {
+//           facebook: socialMedia.facebook,
+//           twitter: socialMedia.twitter,
+//           instagram: socialMedia.instagram,
+//           whatsapp: socialMedia.whatsapp,
+//           telegram: socialMedia.telegram,
+//           linkedin: socialMedia.linkedin,
+//         } : null,
+//       });
+//     } else if (account.role === "user") {
+//       const customer = await db.Customer.findOne({ where: { customerId: accountId } });
+//       prevWalletBalance = customer.walletBalance;
+//       if (!customer) return res.status(404).json({ message: "هذا الحساب غير موجود" });
+
+//       const customerUpdates = {};
+//       if (userRole === "admin" || userRole === "user") {
+//         if (newProfileImageUrl) customerUpdates.profileImageUrl = newProfileImageUrl;
+//         if (walletBalance !== undefined) customerUpdates.walletBalance = parseInt(walletBalance) + parseInt(prevWalletBalance);
+//       }
+//       await customer.update(customerUpdates);
+
+//       // Merge Customer data into response
+//       Object.assign(combinedData, {
+//         profileImageUrl: customer.profileImageUrl,
+//         walletBalance: customer.walletBalance,
+//       });
+//     }
+
+//     res.status(200).json({
+//       message: "تم تعديل الحساب بنجاح",
+//       data: combinedData,
+//     });
+//   } catch (error) {
+//     if (error.name === "SequelizeUniqueConstraintError") {
+//       return res.status(400).json({ message: "هذا الإيميل موجود مسبقا" });
+//     }
+//     res.status(500).json({ message: "خطأ من الخادم", error: error.message });
+//   }
+// };
 
 
 /**

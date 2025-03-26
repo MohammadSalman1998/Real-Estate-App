@@ -27,6 +27,10 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("admin", "company", "user"),
         allowNull: false, // Ensure role is always set
       },
+      isActive: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
     },
     {
       timestamps: true,
