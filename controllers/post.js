@@ -282,16 +282,16 @@ exports.getAllPosts = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-
     const posts = await db.Post.findAll({
       where: whereClause,
       include: includeOptions,
     });
 
     const processedPosts = posts.map((post) => {
-      const postData = post.toJSON(); 
+      const postData = post.toJSON();
       // Combine House and CommercialStore into CommercialStoreOrHouse
-      postData.CommercialStoreOrHouse = postData.House || postData.CommercialStore || null;
+      postData.CommercialStoreOrHouse =
+        postData.House || postData.CommercialStore || null;
       // Remove the original properties
       delete postData.House;
       delete postData.CommercialStore;
@@ -350,7 +350,7 @@ exports.getPostById = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    const post = await db.Post.findByPk(PostId,{
+    const post = await db.Post.findByPk(PostId, {
       where: whereClause,
       include: includeOptions,
     });
@@ -361,12 +361,13 @@ exports.getPostById = async (req, res) => {
       });
     }
 
-      const postData = post.toJSON(); 
-      // Combine House and CommercialStore into CommercialStoreOrHouse
-      postData.CommercialStoreOrHouse = postData.House || postData.CommercialStore || null;
-      // Remove the original properties
-      delete postData.House;
-      delete postData.CommercialStore;
+    const postData = post.toJSON();
+    // Combine House and CommercialStore into CommercialStoreOrHouse
+    postData.CommercialStoreOrHouse =
+      postData.House || postData.CommercialStore || null;
+    // Remove the original properties
+    delete postData.House;
+    delete postData.CommercialStore;
 
     res.status(200).json({
       message: "تم جلب المنشور بنجاح",
@@ -418,7 +419,7 @@ exports.getCompanyPostById = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
-    const post = await db.Post.findByPk(PostId,{
+    const post = await db.Post.findByPk(PostId, {
       where: whereClause,
       include: includeOptions,
     });
@@ -429,12 +430,13 @@ exports.getCompanyPostById = async (req, res) => {
       });
     }
 
-      const postData = post.toJSON(); 
-      // Combine House and CommercialStore into CommercialStoreOrHouse
-      postData.CommercialStoreOrHouse = postData.House || postData.CommercialStore || null;
-      // Remove the original properties
-      delete postData.House;
-      delete postData.CommercialStore;
+    const postData = post.toJSON();
+    // Combine House and CommercialStore into CommercialStoreOrHouse
+    postData.CommercialStoreOrHouse =
+      postData.House || postData.CommercialStore || null;
+    // Remove the original properties
+    delete postData.House;
+    delete postData.CommercialStore;
 
     res.status(200).json({
       message: "تم جلب المنشور بنجاح",
@@ -459,12 +461,10 @@ exports.getPostsByStatus = async (req, res) => {
   const userId = req.user.id;
 
   if (!["pending", "accepted", "rejected"].includes(status)) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "حالة المنشور المدخل خاطئ استخدم [pending, accepted, or rejected]",
-      });
+    return res.status(400).json({
+      message:
+        "حالة المنشور المدخل خاطئ استخدم [pending, accepted, or rejected]",
+    });
   }
 
   try {
@@ -517,12 +517,10 @@ exports.getPostsByType = async (req, res) => {
   const userId = req.user.id;
 
   if (!["house", "commercial_store", "villa"].includes(type)) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "نوع المنشور المدخل خاطئ استخدم [house, commercial_store, or villa] ",
-      });
+    return res.status(400).json({
+      message:
+        "نوع المنشور المدخل خاطئ استخدم [house, commercial_store, or villa] ",
+    });
   }
 
   try {
@@ -615,12 +613,10 @@ exports.editPost = async (req, res) => {
       post.type &&
       !["villa", "commercial_store", "house"].includes(post.type)
     ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "تأكد من نوع المنشور على أنه (villa, commercial_store, or house) ",
-        });
+      return res.status(400).json({
+        message:
+          "تأكد من نوع المنشور على أنه (villa, commercial_store, or house) ",
+      });
     }
 
     // Handle main image update
@@ -820,13 +816,10 @@ exports.filterPosts = async (req, res) => {
       whereClause.type = query.type;
     }
     if (query.status && userRole !== "user") {
-      // Users can't filter by status
       if (!["pending"].includes(query.status)) {
-        return res
-          .status(400)
-          .json({
-            message: "Invalid status. Use pending, accepted, or rejected",
-          });
+        return res.status(400).json({
+          message: "Invalid status. Use pending, accepted, or rejected",
+        });
       }
       whereClause.status = query.status;
     }
@@ -845,16 +838,12 @@ exports.filterPosts = async (req, res) => {
         [Op.lte]: parseFloat(query.rentPriceMax),
       };
     if (query.negotiable && userRole !== "user") {
-      // Users can't filter negotiable (fixed to true)
       whereClause.negotiable =
         query.negotiable === "true" || query.negotiable === true;
     }
 
-    // Type-specific filtering (requires joining with related tables)
+    // Type-specific filtering for Villa only (landArea, buildingArea, poolArea)
     let villaWhere = {};
-    let commercialStoreWhere = {};
-    let houseWhere = {};
-
     if (query.landAreaMin)
       villaWhere.landArea = { [Op.gte]: parseFloat(query.landAreaMin) };
     if (query.landAreaMax)
@@ -876,46 +865,62 @@ exports.filterPosts = async (req, res) => {
         ...villaWhere.poolArea,
         [Op.lte]: parseFloat(query.poolAreaMax),
       };
-    if (query.description)
-      villaWhere.description = { [Op.like]: `%${query.description}%` };
 
-    if (query.areaMin) {
-      commercialStoreWhere.area = { [Op.gte]: parseFloat(query.areaMin) };
-      houseWhere.area = { [Op.gte]: parseFloat(query.areaMin) };
-    }
-    if (query.areaMax) {
-      commercialStoreWhere.area = {
-        ...commercialStoreWhere.area,
-        [Op.lte]: parseFloat(query.areaMax),
-      };
-      houseWhere.area = {
-        ...houseWhere.area,
-        [Op.lte]: parseFloat(query.areaMax),
-      };
-    }
+    // Shared filters (location, description, areaMin, areaMax) with OR logic
+    let sharedConditions = [];
+
     if (query.location) {
-      commercialStoreWhere.location = { [Op.like]: `%${query.location}%` };
-      houseWhere.location = { [Op.like]: `%${query.location}%` };
+      sharedConditions.push({
+        [Op.or]: [
+          { "$CommercialStore.location$": { [Op.like]: `%${query.location}%` } },
+          { "$House.location$": { [Op.like]: `%${query.location}%` } },
+        ],
+      });
     }
-    if (query.description)
-      houseWhere.description = { [Op.like]: `%${query.description}%` };
+    if (query.description) {
+      sharedConditions.push({
+        [Op.or]: [
+          { "$Villa.description$": { [Op.like]: `%${query.description}%` } },
+          { "$CommercialStore.description$": { [Op.like]: `%${query.description}%` } },
+          { "$House.description$": { [Op.like]: `%${query.description}%` } },
+        ],
+      });
+    }
+    if (query.areaMin || query.areaMax) {
+      let areaCondition = {};
+      if (query.areaMin) areaCondition[Op.gte] = parseFloat(query.areaMin);
+      if (query.areaMax) areaCondition[Op.lte] = parseFloat(query.areaMax);
+      sharedConditions.push({
+        [Op.or]: [
+          { "$CommercialStore.area$": areaCondition },
+          { "$House.area$": areaCondition },
+        ],
+      });
+    }
 
-    // Apply where clauses to includes
+    // Apply type-specific where clauses
     includeOptions = includeOptions.map((include) => {
       if (include.model === db.Villa && Object.keys(villaWhere).length > 0) {
         return { ...include, where: villaWhere };
       }
-      if (
-        include.model === db.CommercialStore &&
-        Object.keys(commercialStoreWhere).length > 0
-      ) {
-        return { ...include, where: commercialStoreWhere };
-      }
-      if (include.model === db.House && Object.keys(houseWhere).length > 0) {
-        return { ...include, where: houseWhere };
-      }
       return include;
     });
+
+    // Apply shared conditions with OR logic across all types
+    if (sharedConditions.length > 0) {
+      whereClause[Op.or] = sharedConditions;
+      // Ensure includes are required only if type is specified
+      includeOptions = includeOptions.map((include) => {
+        if (
+          include.model === db.Villa ||
+          include.model === db.CommercialStore ||
+          include.model === db.House
+        ) {
+          return { ...include, required: false }; // Make joins optional
+        }
+        return include;
+      });
+    }
 
     const posts = await db.Post.findAll({
       where: whereClause,

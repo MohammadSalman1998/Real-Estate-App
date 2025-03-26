@@ -8,7 +8,7 @@ const router = express.Router();
 router.post("/register", upload.single("profileImageUrl"), register);
 
 // Register company (admin only)
-router.post("/company/register", auth("admin"), upload.single("profileImageUrl"), registerCompany);
+router.post("/company/register", upload.single("profileImageUrl"), registerCompany);
 
 // Login for all roles
 router.post("/login", login);

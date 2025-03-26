@@ -12,11 +12,17 @@ exports.createSocialMedia = async (req, res) => {
   const { facebook, twitter, instagram, whatsapp, telegram, linkedin, companyId } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     if (userRole !== "company") {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
+
+      // Check if the account is active
+      if (!isActive) {
+        return res.status(403).json({ message: "هذا الحساب غير نشط" });
+      }
 
     let finalCompanyId;
     if (userRole === "company") {
@@ -116,12 +122,18 @@ exports.updateSocialMedia = async (req, res) => {
   const { facebook, twitter, instagram, whatsapp, telegram, linkedin } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     const companyIdInt = parseInt(companyId, 10);
     if (isNaN(companyIdInt)) {
       return res.status(400).json({ message: "تأكد من رقم تعريف الشركة" });
     }
+
+      // Check if the account is active
+      if (!isActive) {
+        return res.status(403).json({ message: "هذا الحساب غير نشط" });
+      }
 
     const socialMedia = await db.SocialMedia.findOne({ where: { companyId: companyIdInt } });
     if (!socialMedia) {
@@ -191,12 +203,18 @@ exports.deleteSocialMedia = async (req, res) => {
   const { companyId } = req.params;
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     const companyIdInt = parseInt(companyId, 10);
     if (isNaN(companyIdInt)) {
       return res.status(400).json({ message: "تأكد من رقم تعريف الشركة" });
     }
+
+      // Check if the account is active
+      if (!isActive) {
+        return res.status(403).json({ message: "هذا الحساب غير نشط" });
+      }
 
     const socialMedia = await db.SocialMedia.findOne({ where: { companyId: companyIdInt } });
     if (!socialMedia) {

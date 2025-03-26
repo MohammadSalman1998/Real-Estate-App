@@ -11,6 +11,7 @@ exports.createAboutUs = async (req, res) => {
   const { description, mission, vision } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     if (userRole !== "admin" && userRole !== "company") {
@@ -29,6 +30,11 @@ exports.createAboutUs = async (req, res) => {
       }
     } else if (userRole === "admin" && !req.body.companyId) {
       return res.status(400).json({ message: "قم بتحديد رقم تعريف الشركة" });
+    }
+
+    // Check if the account is active
+    if (!isActive) {
+      return res.status(403).json({ message: "هذا الحساب غير نشط" });
     }
 
     const companyId = userRole === "company" ? company.id : parseInt(req.body.companyId, 10);
@@ -161,6 +167,7 @@ exports.updateAboutUs = async (req, res) => {
   const { description, mission, vision } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     const aboutUsId = parseInt(id, 10);
@@ -183,6 +190,11 @@ exports.updateAboutUs = async (req, res) => {
         return res.status(403).json({ message: "ليس لديك الصلاحية" });
       }
     }
+
+      // Check if the account is active
+      if (!isActive) {
+        return res.status(403).json({ message: "هذا الحساب غير نشط" });
+      }
 
     await aboutUs.update({
       description: description || aboutUs.description,

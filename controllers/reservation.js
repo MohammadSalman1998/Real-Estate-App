@@ -368,6 +368,7 @@ exports.getUserReservations = async (req, res) => {
 exports.getCompanyReservations = async (req, res) => {
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     if (userRole !== "company") {
@@ -378,6 +379,11 @@ exports.getCompanyReservations = async (req, res) => {
     if (!company) {
       return res.status(404).json({ message: "لم يتم التعرف على حساب الشركة" });
     }
+
+      // Check if the account is active
+      if (!isActive) {
+        return res.status(403).json({ message: "هذا الحساب غير نشط" });
+      }
 
     const reservations = await db.Reservation.findAll({
       include: [
@@ -413,6 +419,7 @@ exports.deleteReservation = async (req, res) => {
   const { id } = req.params;
   const userRole = req.user.role;
   const userId = req.user.id;
+  const isActive = req.user.isActive;
 
   try {
     const reservationId = parseInt(id, 10);
@@ -442,6 +449,11 @@ exports.deleteReservation = async (req, res) => {
     } else {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
+
+      // Check if the account is active
+      if (!isActive) {
+        return res.status(403).json({ message: "هذا الحساب غير نشط" });
+      }
 
     await reservation.destroy();
 
