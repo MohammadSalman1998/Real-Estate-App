@@ -364,6 +364,8 @@ exports.editAccount = async (req, res) => {
         }
         accountUpdates.password = await bcrypt.hash(password, 10);
       }
+      if (phone && (phone.length >= 7 && phone.length <= 20)) accountUpdates.phone = phone;
+      else if (phone) return res.status(400).json({ message: "رقم الهاتف يجب ان يكون بين 7 و 20 رقم" });
       if (email) {
         return res.status(403).json({ message: "صلاحية تعديل ملفك تكمن في: الاسم، صورة البروفايل، المبلغ في المحفظة، معلومات عنا، ووسائل التواصل الاجتماعي" });
       }
