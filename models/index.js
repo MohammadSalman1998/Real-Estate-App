@@ -42,7 +42,7 @@ db.Company.belongsTo(db.Account, { foreignKey: "companyId" });
 db.Account.hasOne(db.Customer, { foreignKey: "customerId", onDelete: "CASCADE" });
 db.Customer.belongsTo(db.Account, { foreignKey: "customerId" });
 
-db.Account.hasMany(db.Post, { foreignKey: "companyId", onDelete: "SET NULL", onUpdate: "CASCADE" });
+db.Account.hasMany(db.Post, { foreignKey: "companyId", onDelete: "CASCADE", onUpdate: "CASCADE" });
 db.Post.belongsTo(db.Account, { foreignKey: "companyId" });
 
 // Company relationships
