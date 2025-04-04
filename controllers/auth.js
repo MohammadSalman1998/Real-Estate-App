@@ -96,7 +96,7 @@ exports.register = async (req, res) => {
 
 exports.registerCompany = async (req, res) => {
   const { name, email, password, phone, webSiteURL, location, auth_code } = req.body;
-  const userRole = req.user.role; // From JWT
+  
   try {
     // Validate inputs
     if (!name || !email || !password || !auth_code  || !location) {
@@ -142,7 +142,7 @@ exports.registerCompany = async (req, res) => {
       password: hashedPassword,
       phone,
       role: "company",
-      isActive: userRole === 'admin' ? true : false,
+      isActive: false,
     });
 
     // Create company
