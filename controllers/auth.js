@@ -306,7 +306,7 @@ exports.editAccount = async (req, res) => {
     }
 
       // Check if the account is active
-      if (!account.isActive) {
+      if (userRole !== "admin" && !account.isActive) {
         return res.status(403).json({ message: "هذا الحساب غير نشط" });
       }
 
