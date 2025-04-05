@@ -568,6 +568,7 @@ exports.getAllAccounts = async (req, res) => {
           email: account.email,
           phone: account.phone || null,
           role: account.role,
+          isActive: account.isActive,
           createdAt: account.createdAt,
         };
 
@@ -657,6 +658,7 @@ exports.getAccountById = async (req, res) => {
       email: account.email,
       phone: account.phone || null,
       role: account.role,
+      isActive: account.isActive,
       createdAt: account.createdAt,
     };
 
