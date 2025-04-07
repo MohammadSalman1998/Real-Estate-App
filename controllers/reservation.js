@@ -11,7 +11,7 @@ const schedule = require('node-schedule');
 
 
 exports.createReservation = async (req, res) => {
-  const { postId } = req.body;
+  const { postId, email } = req.body;
   const userRole = req.user.role;
   const userId = req.user.id;
 
@@ -27,6 +27,20 @@ exports.createReservation = async (req, res) => {
     const postIdInt = parseInt(postId, 10);
     if (isNaN(postIdInt)) {
       return res.status(400).json({ message: "معرف المنشور غير صالح" });
+    }
+
+    // Fetch the user's account to verify email
+    const account = await db.Account.findByPk(userId);
+    if (!account) {
+      return res.status(404).json({ message: "الحساب غير موجود" });
+    }
+
+    // Verify the provided email matches the account's email
+    if (!email) {
+      return res.status(400).json({ message: "يرجى تقديم الإيميل لتأكيد الحجز" });
+    }
+    if (email !== account.email) {
+      return res.status(400).json({ message: "الإيميل المقدم غير مطابق لإيميل الحساب" });
     }
 
     // Start a transaction to ensure atomicity
