@@ -20,6 +20,7 @@ exports.createReservation = async (req, res) => {
       return res.status(403).json({ message: "ليس لديك الصلاحية" });
     }
 
+
     if (!postId) {
       return res.status(400).json({ message: "مطلوب معرف المنشور" });
     }
@@ -36,12 +37,12 @@ exports.createReservation = async (req, res) => {
     }
 
     // Verify the provided email matches the account's email
-    if (!email) {
-      return res.status(400).json({ message: "يرجى تقديم الإيميل لتأكيد الحجز" });
-    }
-    if (email !== account.email) {
-      return res.status(400).json({ message: "الإيميل المقدم غير مطابق لإيميل الحساب" });
-    }
+    // if (!email) {
+    //   return res.status(400).json({ message: "يرجى تقديم الإيميل لتأكيد الحجز" });
+    // }
+    // if (email !== account.email) {
+    //   return res.status(400).json({ message: "الإيميل المقدم غير مطابق لإيميل الحساب" });
+    // }
 
     // Start a transaction to ensure atomicity
     const result = await db.sequelize.transaction(async (t) => {
@@ -90,7 +91,8 @@ exports.createReservation = async (req, res) => {
 
       // Check user’s wallet balance
       if (customer.walletBalance < amount) {
-        throw new Error("رصيد المحفظة غير كافٍ");
+        // throw new Error("رصيد المحفظة غير كافٍ");
+        return res.status(400).json({ message: "رصيد المحفظة غير كافٍ" });
       }
 
       // Update wallets with explicit DECIMAL handling
@@ -156,7 +158,7 @@ exports.createReservation = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "تمت معالجة الحجز والدفع بنجاح",
+      message: "تمت معالجة الحجز والدفع بنجاح يرجى اكمال الدفع خلال ٤٨ ساعة ",
       data: {
         reservation: result.reservation,
         transaction: result.transaction,

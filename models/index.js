@@ -52,6 +52,9 @@ db.AboutUs.belongsTo(db.Company, { foreignKey: "companyId" });
 db.Company.hasMany(db.Complaint, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.Complaint.belongsTo(db.Company, { foreignKey: "companyId" });
 
+// db.Account.hasMany(db.Transaction, { foreignKey: "companyId", onDelete: "CASCADE" });
+// db.Transaction.belongsTo(db.Account, { foreignKey: "companyId" });
+
 db.Company.hasMany(db.Transaction, { foreignKey: "companyId", onDelete: "CASCADE" });
 db.Transaction.belongsTo(db.Company, { foreignKey: "companyId" });
 
